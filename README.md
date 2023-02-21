@@ -89,68 +89,67 @@ import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as rds from 'aws-cdk-lib/aws-rds';
 
-const app = new App();
-const stack = new Stack(app, 'DatabaseClusterEndpointStack');
+const app = new cdk.App();
+const stack = new cdk.Stack(app, 'DatabaseClusterEndpointStack');
 
-const vpc = new Vpc(stack, 'Vpc', {
+const vpc = new ec2.Vpc(stack, 'Vpc', {
   natGateways: 0,
 });
-const cluster = new DatabaseCluster(stack, 'DatabaseCluster', {
-  engine: DatabaseClusterEngine.auroraMysql({
-    version: AuroraMysqlEngineVersion.VER_3_02_1,
+const cluster = new rds.DatabaseCluster(vpc, 'DatabaseCluster', {
+  engine: rds.DatabaseClusterEngine.auroraMysql({
+    version: rds.AuroraMysqlEngineVersion.VER_3_02_1,
   }),
   instanceProps: {
     vpc,
     vpcSubnets: {
-      subnetType: SubnetType.PRIVATE_ISOLATED,
+      subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
     },
   },
   instances: 5,
-  removalPolicy: RemovalPolicy.DESTROY,
+  // remove this property if in production
+  removalPolicy: cdk.RemovalPolicy.DESTROY,
 });
 
-const analyticalQueryInstances = cluster.instanceIdentifiers
-  // Filters only the 4th and 5th instances. (Indexes start from 0.)
-  .filter((_, index) => [3, 4].includes(index))
-  // DatabaseCluster creates resources with an ID of "Instance{index}" (Indexes start from 1.),
-  // so get these from the cluster.
-  .map(
-    (_, index) =>
-      cluster.node.findChild(`Instance${index + 1}`) as cdk.CfnDBInstance
-  );
+// DatabaseCluster creates resources with an ID of "Instance{index}",
+// so get these from the cluster. (Indexes start from 1.)
+const instances = cluster.instanceIdentifiers.map(
+  (_, index) =>
+    cluster.node.findChild(`Instance${index + 1}`) as rds.CfnDBInstance
+);
+
+// Filters only the 4th and 5th instances for analytical. (Indexes start from 0.)
+const analyticalQueryInstances = instances.filter((_, index) =>
+  [3, 4].includes(index)
+);
+const normalQueryInstances = instances.filter(
+  (_, index) => ![3, 4].includes(index)
+);
 
 /**
  * [Optional]
  * Set a low priority to prevent this Aurora Replicas from being promoted
  * to the primary instance in the event of a failure of the existing primary instance.
  */
-analyticalQueryInstances.forEach((instance) =>
-  instance.addPropertyOverride('PromotionTier', 15)
-);
+analyticalQueryInstances.forEach((analytical) => {
+  analytical.addPropertyOverride('PromotionTier', 15);
+  normalQueryInstances.forEach((normal) => analytical.addDependency(normal));
+});
 
 // Create endpoints for analytical queris
-const analyticalQueryEndpoint = new DatabaseClusterEndpoint(
-  stack,
-  'AnalyticalQueryEndpoint',
-  {
-    cluster,
-    endpointType: DatabaseClusterEndpointType.READER,
-    members: DatabaseClusterEndpointMember.include(
-      analyticalQueryInstances.map((instance) => instance.ref)
-    ),
-  }
-);
+new DatabaseClusterEndpoint(cluster, 'AnalyticalQueryEndpoint', {
+  cluster,
+  endpointType: DatabaseClusterEndpointType.READER,
+  members: DatabaseClusterEndpointMember.include(
+    analyticalQueryInstances.map((instance) => instance.ref)
+  ),
+});
 
 // Create endpoints for normal queris
-const normalQueryEndpoint = new DatabaseClusterEndpoint(
-  stack,
-  'NormalQueryEndpoint',
-  {
-    cluster,
-    endpointType: DatabaseClusterEndpointType.READER,
-    members: DatabaseClusterEndpointMember.exclude(
-      analyticalQueryInstances.map((instance) => instance.ref)
-    ),
-  }
-);
+new DatabaseClusterEndpoint(cluster, 'NormalQueryEndpoint', {
+  cluster,
+  endpointType: DatabaseClusterEndpointType.READER,
+  members: DatabaseClusterEndpointMember.exclude(
+    analyticalQueryInstances.map((instance) => instance.ref)
+  ),
+});
 ```
