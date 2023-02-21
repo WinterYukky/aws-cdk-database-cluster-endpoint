@@ -4,6 +4,8 @@
 
 ### DatabaseClusterEndpoint <a name="DatabaseClusterEndpoint" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpoint"></a>
 
+Creates a new custom endpoint and associates it with an Amazon Aurora DB cluster.
+
 #### Initializers <a name="Initializers" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpoint.Initializer"></a>
 
 ```typescript
@@ -144,8 +146,8 @@ Check whether the given construct is a Resource.
 | <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpoint.property.node">node</a></code> | <code>constructs.Node</code> | The tree node. |
 | <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpoint.property.env">env</a></code> | <code>aws-cdk-lib.ResourceEnvironment</code> | The environment this resource belongs to. |
 | <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpoint.property.stack">stack</a></code> | <code>aws-cdk-lib.Stack</code> | The stack in which this resource is defined. |
-| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpoint.property.endpoint">endpoint</a></code> | <code>aws-cdk-lib.aws_rds.Endpoint</code> | *No description.* |
-| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpoint.property.endpointIdentifier">endpointIdentifier</a></code> | <code>string</code> | *No description.* |
+| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpoint.property.endpoint">endpoint</a></code> | <code>aws-cdk-lib.aws_rds.Endpoint</code> | The endpoint of the custom endpoint. |
+| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpoint.property.endpointIdentifier">endpointIdentifier</a></code> | <code>string</code> | The identifier associated with the endpoint. |
 
 ---
 
@@ -200,6 +202,8 @@ public readonly endpoint: Endpoint;
 
 - *Type:* aws-cdk-lib.aws_rds.Endpoint
 
+The endpoint of the custom endpoint.
+
 ---
 
 ##### `endpointIdentifier`<sup>Required</sup> <a name="endpointIdentifier" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpoint.property.endpointIdentifier"></a>
@@ -210,6 +214,10 @@ public readonly endpointIdentifier: string;
 
 - *Type:* string
 
+The identifier associated with the endpoint.
+
+This parameter is stored as a lowercase string.
+
 ---
 
 
@@ -217,7 +225,7 @@ public readonly endpointIdentifier: string;
 
 ### DatabaseClusterEndpointProps <a name="DatabaseClusterEndpointProps" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointProps"></a>
 
-DatabaseClusterEndpointProps.
+Props of DatabaseClusterEndpoint.
 
 #### Initializer <a name="Initializer" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointProps.Initializer"></a>
 
@@ -231,10 +239,10 @@ const databaseClusterEndpointProps: DatabaseClusterEndpointProps = { ... }
 
 | **Name** | **Type** | **Description** |
 | --- | --- | --- |
-| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointProps.property.cluster">cluster</a></code> | <code>aws-cdk-lib.aws_rds.IDatabaseCluster</code> | The clusters that create endpoints. |
-| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointProps.property.databaseClusterEndpointIdentifier">databaseClusterEndpointIdentifier</a></code> | <code>string</code> | Identifier of the endpoint. |
-| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointProps.property.endpointType">endpointType</a></code> | <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointType">DatabaseClusterEndpointType</a></code> | The endpoint type. |
-| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointProps.property.targets">targets</a></code> | <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointTarget">DatabaseClusterEndpointTarget</a></code> | Endpoint targets. |
+| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointProps.property.cluster">cluster</a></code> | <code>aws-cdk-lib.aws_rds.IDatabaseCluster</code> | The DB cluster associated with the endpoint. |
+| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointProps.property.endpointIdentifier">endpointIdentifier</a></code> | <code>string</code> | The identifier to use for the new endpoint. |
+| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointProps.property.endpointType">endpointType</a></code> | <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointType">DatabaseClusterEndpointType</a></code> | The type of the endpoint, one of: - READER - WRITER - ANY. |
+| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointProps.property.members">members</a></code> | <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointMember">DatabaseClusterEndpointMember</a></code> | Endpoint members. |
 
 ---
 
@@ -246,20 +254,22 @@ public readonly cluster: IDatabaseCluster;
 
 - *Type:* aws-cdk-lib.aws_rds.IDatabaseCluster
 
-The clusters that create endpoints.
+The DB cluster associated with the endpoint.
 
 ---
 
-##### `databaseClusterEndpointIdentifier`<sup>Optional</sup> <a name="databaseClusterEndpointIdentifier" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointProps.property.databaseClusterEndpointIdentifier"></a>
+##### `endpointIdentifier`<sup>Optional</sup> <a name="endpointIdentifier" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointProps.property.endpointIdentifier"></a>
 
 ```typescript
-public readonly databaseClusterEndpointIdentifier: string;
+public readonly endpointIdentifier: string;
 ```
 
 - *Type:* string
-- *Default:* A name is automatically generated.
+- *Default:* A identifier is automatically generated.
 
-Identifier of the endpoint.
+The identifier to use for the new endpoint.
+
+This parameter is stored as a lowercase string.
 
 ---
 
@@ -272,76 +282,85 @@ public readonly endpointType: DatabaseClusterEndpointType;
 - *Type:* <a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointType">DatabaseClusterEndpointType</a>
 - *Default:* DatabaseClusterEndpointType.ANY
 
-The endpoint type.
-
-Valid type is
-- READER
-- WRITER
-- ANY
+The type of the endpoint, one of: - READER - WRITER - ANY.
 
 ---
 
-##### `targets`<sup>Optional</sup> <a name="targets" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointProps.property.targets"></a>
+##### `members`<sup>Optional</sup> <a name="members" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointProps.property.members"></a>
 
 ```typescript
-public readonly targets: DatabaseClusterEndpointTarget;
+public readonly members: DatabaseClusterEndpointMember;
 ```
 
-- *Type:* <a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointTarget">DatabaseClusterEndpointTarget</a>
+- *Type:* <a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointMember">DatabaseClusterEndpointMember</a>
 - *Default:* all instances in cluster.
 
-Endpoint targets.
+Endpoint members.
 
 ---
 
 ## Classes <a name="Classes" id="Classes"></a>
 
-### DatabaseClusterEndpointTarget <a name="DatabaseClusterEndpointTarget" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointTarget"></a>
+### DatabaseClusterEndpointMember <a name="DatabaseClusterEndpointMember" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointMember"></a>
+
+Set members for custom endpoint groups.
 
 
 #### Static Functions <a name="Static Functions" id="Static Functions"></a>
 
 | **Name** | **Description** |
 | --- | --- |
-| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointTarget.all">all</a></code> | *No description.* |
-| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointTarget.exclude">exclude</a></code> | *No description.* |
-| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointTarget.include">include</a></code> | *No description.* |
+| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointMember.all">all</a></code> | Set all instances to a custom endpoint group. |
+| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointMember.exclude">exclude</a></code> | Set anything other than the identifiers given in the argument to the custom endpoint group. |
+| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointMember.include">include</a></code> | Set the identifiers specified in the arguments to the custom endpoint group. |
 
 ---
 
-##### `all` <a name="all" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointTarget.all"></a>
+##### `all` <a name="all" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointMember.all"></a>
 
 ```typescript
-import { DatabaseClusterEndpointTarget } from 'aws-cdk-database-cluster-endpoint'
+import { DatabaseClusterEndpointMember } from 'aws-cdk-database-cluster-endpoint'
 
-DatabaseClusterEndpointTarget.all()
+DatabaseClusterEndpointMember.all()
 ```
 
-##### `exclude` <a name="exclude" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointTarget.exclude"></a>
+Set all instances to a custom endpoint group.
+
+##### `exclude` <a name="exclude" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointMember.exclude"></a>
 
 ```typescript
-import { DatabaseClusterEndpointTarget } from 'aws-cdk-database-cluster-endpoint'
+import { DatabaseClusterEndpointMember } from 'aws-cdk-database-cluster-endpoint'
 
-DatabaseClusterEndpointTarget.exclude(identifiers: string[])
+DatabaseClusterEndpointMember.exclude(identifiers: string[])
 ```
 
-###### `identifiers`<sup>Required</sup> <a name="identifiers" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointTarget.exclude.parameter.identifiers"></a>
+Set anything other than the identifiers given in the argument to the custom endpoint group.
+
+All other eligible instances are reachable through the custom endpoint.
+
+###### `identifiers`<sup>Required</sup> <a name="identifiers" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointMember.exclude.parameter.identifiers"></a>
 
 - *Type:* string[]
+
+List of DB instance identifiers that aren’t part of the custom endpoint group.
 
 ---
 
-##### `include` <a name="include" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointTarget.include"></a>
+##### `include` <a name="include" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointMember.include"></a>
 
 ```typescript
-import { DatabaseClusterEndpointTarget } from 'aws-cdk-database-cluster-endpoint'
+import { DatabaseClusterEndpointMember } from 'aws-cdk-database-cluster-endpoint'
 
-DatabaseClusterEndpointTarget.include(identifiers: string[])
+DatabaseClusterEndpointMember.include(identifiers: string[])
 ```
 
-###### `identifiers`<sup>Required</sup> <a name="identifiers" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointTarget.include.parameter.identifiers"></a>
+Set the identifiers specified in the arguments to the custom endpoint group.
+
+###### `identifiers`<sup>Required</sup> <a name="identifiers" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointMember.include.parameter.identifiers"></a>
 
 - *Type:* string[]
+
+List of DB instance identifiers that are part of the custom endpoint group.
 
 ---
 
@@ -352,27 +371,45 @@ DatabaseClusterEndpointTarget.include(identifiers: string[])
 
 ### DatabaseClusterEndpointType <a name="DatabaseClusterEndpointType" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointType"></a>
 
+Each custom endpoint has an associated type that determines which DB instances are eligible to be associated with that endpoint.
+
+Currently, the type can be READER, WRITER, or ANY.
+
 #### Members <a name="Members" id="Members"></a>
 
 | **Name** | **Description** |
 | --- | --- |
-| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointType.READER">READER</a></code> | *No description.* |
-| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointType.WRITER">WRITER</a></code> | *No description.* |
-| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointType.ANY">ANY</a></code> | *No description.* |
+| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointType.READER">READER</a></code> | Only DB instances that are read-only Aurora Replicas can be part of a READER custom endpoint. |
+| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointType.ANY">ANY</a></code> | Both read-only Aurora Replicas and the read/write primary instance can be part ofan ANY custom endpoint. |
+| <code><a href="#aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointType.WRITER">WRITER</a></code> | The WRITER type applies only to multi-master clusters, because those clusters can include multiple read/write DB instances. |
 
 ---
 
 ##### `READER` <a name="READER" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointType.READER"></a>
+
+Only DB instances that are read-only Aurora Replicas can be part of a READER custom endpoint.
+
+The READER type applies only to clusters using single-master replication,
+because those clusters can include multiple read-only DB instances.
+
+---
+
+
+##### `ANY` <a name="ANY" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointType.ANY"></a>
+
+Both read-only Aurora Replicas and the read/write primary instance can be part ofan ANY custom endpoint.
+
+Aurora directs connections to cluster endpoints with type ANY to any associated DB instance with equal probability.
+Because you can't determine in advance if you are connecting to the primary instance of a read-only Aurora Replica,
+use this kind of endpoint for read-only connections only.
+The ANY type applies to clusters using any replication topology.
 
 ---
 
 
 ##### `WRITER` <a name="WRITER" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointType.WRITER"></a>
 
----
-
-
-##### `ANY` <a name="ANY" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpointType.ANY"></a>
+The WRITER type applies only to multi-master clusters, because those clusters can include multiple read/write DB instances.
 
 ---
 
