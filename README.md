@@ -2,6 +2,15 @@
 
 A construct library for creating custom endpoints for Amazon Aurora with the AWS CDK.
 
+## Install
+
+Install the `aws-cdk-database-cluster-endpoint` through npm:
+```shell
+npm install aws-cdk-database-cluster-endpoint
+```
+
+## Getting Started
+
 Define an all instances target custom endpoint.
 
 ```ts
