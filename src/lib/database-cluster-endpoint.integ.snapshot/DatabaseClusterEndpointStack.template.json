@@ -1,0 +1,2532 @@
+{
+ "Resources": {
+  "Vpc8378EB38": {
+   "Type": "AWS::EC2::VPC",
+   "Properties": {
+    "CidrBlock": "10.0.0.0/16",
+    "EnableDnsHostnames": true,
+    "EnableDnsSupport": true,
+    "InstanceTenancy": "default",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   }
+  },
+  "VpcPublicSubnet1Subnet5C2D37C4": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    },
+    "AvailabilityZone": {
+     "Fn::Select": [
+      0,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.0.0/18",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc/PublicSubnet1"
+     }
+    ]
+   }
+  },
+  "VpcPublicSubnet1RouteTable6C95E38E": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    },
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc/PublicSubnet1"
+     }
+    ]
+   }
+  },
+  "VpcPublicSubnet1RouteTableAssociation97140677": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcPublicSubnet1RouteTable6C95E38E"
+    },
+    "SubnetId": {
+     "Ref": "VpcPublicSubnet1Subnet5C2D37C4"
+    }
+   }
+  },
+  "VpcPublicSubnet1DefaultRoute3DA9E72A": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcPublicSubnet1RouteTable6C95E38E"
+    },
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "VpcIGWD7BA715C"
+    }
+   },
+   "DependsOn": [
+    "VpcVPCGWBF912B6E"
+   ]
+  },
+  "VpcPublicSubnet2Subnet691E08A3": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    },
+    "AvailabilityZone": {
+     "Fn::Select": [
+      1,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.64.0/18",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc/PublicSubnet2"
+     }
+    ]
+   }
+  },
+  "VpcPublicSubnet2RouteTable94F7E489": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    },
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc/PublicSubnet2"
+     }
+    ]
+   }
+  },
+  "VpcPublicSubnet2RouteTableAssociationDD5762D8": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcPublicSubnet2RouteTable94F7E489"
+    },
+    "SubnetId": {
+     "Ref": "VpcPublicSubnet2Subnet691E08A3"
+    }
+   }
+  },
+  "VpcPublicSubnet2DefaultRoute97F91067": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcPublicSubnet2RouteTable94F7E489"
+    },
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "VpcIGWD7BA715C"
+    }
+   },
+   "DependsOn": [
+    "VpcVPCGWBF912B6E"
+   ]
+  },
+  "VpcIsolatedSubnet1SubnetE48C5737": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    },
+    "AvailabilityZone": {
+     "Fn::Select": [
+      0,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.128.0/18",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc/IsolatedSubnet1"
+     }
+    ]
+   }
+  },
+  "VpcIsolatedSubnet1RouteTable4771E3E5": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    },
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc/IsolatedSubnet1"
+     }
+    ]
+   }
+  },
+  "VpcIsolatedSubnet1RouteTableAssociationD300FCBB": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcIsolatedSubnet1RouteTable4771E3E5"
+    },
+    "SubnetId": {
+     "Ref": "VpcIsolatedSubnet1SubnetE48C5737"
+    }
+   }
+  },
+  "VpcIsolatedSubnet2Subnet16364B91": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    },
+    "AvailabilityZone": {
+     "Fn::Select": [
+      1,
+      {
+       "Fn::GetAZs": ""
+      }
+     ]
+    },
+    "CidrBlock": "10.0.192.0/18",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Isolated"
+     },
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc/IsolatedSubnet2"
+     }
+    ]
+   }
+  },
+  "VpcIsolatedSubnet2RouteTable1D30AF7D": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    },
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc/IsolatedSubnet2"
+     }
+    ]
+   }
+  },
+  "VpcIsolatedSubnet2RouteTableAssociationF7B18CCA": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "VpcIsolatedSubnet2RouteTable1D30AF7D"
+    },
+    "SubnetId": {
+     "Ref": "VpcIsolatedSubnet2Subnet16364B91"
+    }
+   }
+  },
+  "VpcIGWD7BA715C": {
+   "Type": "AWS::EC2::InternetGateway",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   }
+  },
+  "VpcVPCGWBF912B6E": {
+   "Type": "AWS::EC2::VPCGatewayAttachment",
+   "Properties": {
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    },
+    "InternetGatewayId": {
+     "Ref": "VpcIGWD7BA715C"
+    }
+   }
+  },
+  "VpcDatabaseClusterSubnets1936229F": {
+   "Type": "AWS::RDS::DBSubnetGroup",
+   "Properties": {
+    "DBSubnetGroupDescription": "Subnets for DatabaseCluster database",
+    "SubnetIds": [
+     {
+      "Ref": "VpcIsolatedSubnet1SubnetE48C5737"
+     },
+     {
+      "Ref": "VpcIsolatedSubnet2Subnet16364B91"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterSecurityGroup897E7FF1": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "RDS security group",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ],
+    "VpcId": {
+     "Ref": "Vpc8378EB38"
+    }
+   }
+  },
+  "VpcDatabaseClusterSecret7F489BCA": {
+   "Type": "AWS::SecretsManager::Secret",
+   "Properties": {
+    "Description": {
+     "Fn::Join": [
+      "",
+      [
+       "Generated by the CDK for stack: ",
+       {
+        "Ref": "AWS::StackName"
+       }
+      ]
+     ]
+    },
+    "GenerateSecretString": {
+     "ExcludeCharacters": " %+~`#$&*()|[]{}:;<>?!'/@\"\\",
+     "GenerateStringKey": "password",
+     "PasswordLength": 30,
+     "SecretStringTemplate": "{\"username\":\"admin\"}"
+    },
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "VpcDatabaseClusterSecretAttachmentF3773776": {
+   "Type": "AWS::SecretsManager::SecretTargetAttachment",
+   "Properties": {
+    "SecretId": {
+     "Ref": "VpcDatabaseClusterSecret7F489BCA"
+    },
+    "TargetId": {
+     "Ref": "VpcDatabaseClusterAA5493E5"
+    },
+    "TargetType": "AWS::RDS::DBCluster"
+   }
+  },
+  "VpcDatabaseClusterAA5493E5": {
+   "Type": "AWS::RDS::DBCluster",
+   "Properties": {
+    "CopyTagsToSnapshot": true,
+    "DBClusterParameterGroupName": "default.aurora-mysql8.0",
+    "DBSubnetGroupName": {
+     "Ref": "VpcDatabaseClusterSubnets1936229F"
+    },
+    "Engine": "aurora-mysql",
+    "EngineVersion": "8.0.mysql_aurora.3.02.1",
+    "MasterUsername": {
+     "Fn::Join": [
+      "",
+      [
+       "{{resolve:secretsmanager:",
+       {
+        "Ref": "VpcDatabaseClusterSecret7F489BCA"
+       },
+       ":SecretString:username::}}"
+      ]
+     ]
+    },
+    "MasterUserPassword": {
+     "Fn::Join": [
+      "",
+      [
+       "{{resolve:secretsmanager:",
+       {
+        "Ref": "VpcDatabaseClusterSecret7F489BCA"
+       },
+       ":SecretString:password::}}"
+      ]
+     ]
+    },
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ],
+    "VpcSecurityGroupIds": [
+     {
+      "Fn::GetAtt": [
+       "VpcDatabaseClusterSecurityGroup897E7FF1",
+       "GroupId"
+      ]
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "VpcDatabaseClusterInstance174FB25DB": {
+   "Type": "AWS::RDS::DBInstance",
+   "Properties": {
+    "DBClusterIdentifier": {
+     "Ref": "VpcDatabaseClusterAA5493E5"
+    },
+    "DBInstanceClass": "db.t3.medium",
+    "DBSubnetGroupName": {
+     "Ref": "VpcDatabaseClusterSubnets1936229F"
+    },
+    "Engine": "aurora-mysql",
+    "PubliclyAccessible": false,
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   },
+   "DependsOn": [
+    "VpcIsolatedSubnet1RouteTableAssociationD300FCBB",
+    "VpcIsolatedSubnet2RouteTableAssociationF7B18CCA"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "VpcDatabaseClusterInstance204C65AA6": {
+   "Type": "AWS::RDS::DBInstance",
+   "Properties": {
+    "DBClusterIdentifier": {
+     "Ref": "VpcDatabaseClusterAA5493E5"
+    },
+    "DBInstanceClass": "db.t3.medium",
+    "DBSubnetGroupName": {
+     "Ref": "VpcDatabaseClusterSubnets1936229F"
+    },
+    "Engine": "aurora-mysql",
+    "PubliclyAccessible": false,
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   },
+   "DependsOn": [
+    "VpcIsolatedSubnet1RouteTableAssociationD300FCBB",
+    "VpcIsolatedSubnet2RouteTableAssociationF7B18CCA"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "VpcDatabaseClusterInstance3E32B4331": {
+   "Type": "AWS::RDS::DBInstance",
+   "Properties": {
+    "DBClusterIdentifier": {
+     "Ref": "VpcDatabaseClusterAA5493E5"
+    },
+    "DBInstanceClass": "db.t3.medium",
+    "DBSubnetGroupName": {
+     "Ref": "VpcDatabaseClusterSubnets1936229F"
+    },
+    "Engine": "aurora-mysql",
+    "PubliclyAccessible": false,
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   },
+   "DependsOn": [
+    "VpcIsolatedSubnet1RouteTableAssociationD300FCBB",
+    "VpcIsolatedSubnet2RouteTableAssociationF7B18CCA"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "VpcDatabaseClusterInstance4084A1C2D": {
+   "Type": "AWS::RDS::DBInstance",
+   "Properties": {
+    "DBClusterIdentifier": {
+     "Ref": "VpcDatabaseClusterAA5493E5"
+    },
+    "DBInstanceClass": "db.t3.medium",
+    "DBSubnetGroupName": {
+     "Ref": "VpcDatabaseClusterSubnets1936229F"
+    },
+    "Engine": "aurora-mysql",
+    "PromotionTier": 15,
+    "PubliclyAccessible": false,
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   },
+   "DependsOn": [
+    "VpcDatabaseClusterInstance174FB25DB",
+    "VpcDatabaseClusterInstance204C65AA6",
+    "VpcDatabaseClusterInstance3E32B4331",
+    "VpcIsolatedSubnet1RouteTableAssociationD300FCBB",
+    "VpcIsolatedSubnet2RouteTableAssociationF7B18CCA"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "VpcDatabaseClusterInstance5FCEB7BEA": {
+   "Type": "AWS::RDS::DBInstance",
+   "Properties": {
+    "DBClusterIdentifier": {
+     "Ref": "VpcDatabaseClusterAA5493E5"
+    },
+    "DBInstanceClass": "db.t3.medium",
+    "DBSubnetGroupName": {
+     "Ref": "VpcDatabaseClusterSubnets1936229F"
+    },
+    "Engine": "aurora-mysql",
+    "PromotionTier": 15,
+    "PubliclyAccessible": false,
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   },
+   "DependsOn": [
+    "VpcDatabaseClusterInstance174FB25DB",
+    "VpcDatabaseClusterInstance204C65AA6",
+    "VpcDatabaseClusterInstance3E32B4331",
+    "VpcIsolatedSubnet1RouteTableAssociationD300FCBB",
+    "VpcIsolatedSubnet2RouteTableAssociationF7B18CCA"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageFunctionServiceRoleA6D75633": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageFunctionServiceRoleDefaultPolicyFDA9DB7D": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "rds:AddTagsToResource",
+        "rds:CreateDBClusterEndpoint",
+        "rds:DeleteDBClusterEndpoint",
+        "rds:ModifyDBClusterEndpoint"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":rds:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":cluster:",
+           {
+            "Ref": "VpcDatabaseClusterAA5493E5"
+           }
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":rds:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":cluster-endpoint:databaseclusterendpointstacsteranalyticalqueryendpoint0d2f3a26"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageFunctionServiceRoleDefaultPolicyFDA9DB7D",
+    "Roles": [
+     {
+      "Ref": "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageFunctionServiceRoleA6D75633"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageFunctionC8D90D70": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "04e11cb8a3ea95459c3b5cff687168f44b2c0516d607086fb0cd220ca32c40dc.zip"
+    },
+    "Role": {
+     "Fn::GetAtt": [
+      "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageFunctionServiceRoleA6D75633",
+      "Arn"
+     ]
+    },
+    "Architectures": [
+     "arm64"
+    ],
+    "Environment": {
+     "Variables": {
+      "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1"
+     }
+    },
+    "Handler": "index.onEvent",
+    "Runtime": "nodejs18.x",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   },
+   "DependsOn": [
+    "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageFunctionServiceRoleDefaultPolicyFDA9DB7D",
+    "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageFunctionServiceRoleA6D75633"
+   ]
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceWaitFunctionServiceRole66569FE7": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceWaitFunctionServiceRoleDefaultPolicy2961B178": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "rds:DescribeDBClusterEndpoints",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":rds:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":cluster:",
+           {
+            "Ref": "VpcDatabaseClusterAA5493E5"
+           }
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":rds:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":cluster-endpoint:databaseclusterendpointstacsteranalyticalqueryendpoint0d2f3a26"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "VpcDatabaseClusterAnalyticalQueryEndpointResourceWaitFunctionServiceRoleDefaultPolicy2961B178",
+    "Roles": [
+     {
+      "Ref": "VpcDatabaseClusterAnalyticalQueryEndpointResourceWaitFunctionServiceRole66569FE7"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceWaitFunction0790C299": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "ae0d1e6760536bfb58a816710fde39ab68c7fa328e3c6ca0be31ad50f7faa8bf.zip"
+    },
+    "Role": {
+     "Fn::GetAtt": [
+      "VpcDatabaseClusterAnalyticalQueryEndpointResourceWaitFunctionServiceRole66569FE7",
+      "Arn"
+     ]
+    },
+    "Architectures": [
+     "arm64"
+    ],
+    "Environment": {
+     "Variables": {
+      "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1"
+     }
+    },
+    "Handler": "index.isComplete",
+    "Runtime": "nodejs14.x",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   },
+   "DependsOn": [
+    "VpcDatabaseClusterAnalyticalQueryEndpointResourceWaitFunctionServiceRoleDefaultPolicy2961B178",
+    "VpcDatabaseClusterAnalyticalQueryEndpointResourceWaitFunctionServiceRole66569FE7"
+   ]
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonEventServiceRoleBD909E6D": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonEventServiceRoleDefaultPolicy88E12E64": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageFunctionC8D90D70",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageFunctionC8D90D70",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterAnalyticalQueryEndpointResourceWaitFunction0790C299",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "VpcDatabaseClusterAnalyticalQueryEndpointResourceWaitFunction0790C299",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "states:StartExecution",
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderwaiterstatemachine78CB6F3D"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonEventServiceRoleDefaultPolicy88E12E64",
+    "Roles": [
+     {
+      "Ref": "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonEventServiceRoleBD909E6D"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonEvent7825EF8A": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "53c95d71cfd280747d971a38505aea07f812fdba75874a090358a2fc4f58f79b.zip"
+    },
+    "Role": {
+     "Fn::GetAtt": [
+      "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonEventServiceRoleBD909E6D",
+      "Arn"
+     ]
+    },
+    "Description": "AWS CDK resource provider framework - onEvent (DatabaseClusterEndpointStack/Vpc/DatabaseCluster/AnalyticalQueryEndpoint/ResourceManageProvider)",
+    "Environment": {
+     "Variables": {
+      "USER_ON_EVENT_FUNCTION_ARN": {
+       "Fn::GetAtt": [
+        "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageFunctionC8D90D70",
+        "Arn"
+       ]
+      },
+      "USER_IS_COMPLETE_FUNCTION_ARN": {
+       "Fn::GetAtt": [
+        "VpcDatabaseClusterAnalyticalQueryEndpointResourceWaitFunction0790C299",
+        "Arn"
+       ]
+      },
+      "WAITER_STATE_MACHINE_ARN": {
+       "Ref": "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderwaiterstatemachine78CB6F3D"
+      }
+     }
+    },
+    "Handler": "framework.onEvent",
+    "Runtime": "nodejs14.x",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ],
+    "Timeout": 900
+   },
+   "DependsOn": [
+    "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonEventServiceRoleDefaultPolicy88E12E64",
+    "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonEventServiceRoleBD909E6D"
+   ]
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkisCompleteServiceRoleCCD8A86A": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkisCompleteServiceRoleDefaultPolicy3F427987": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageFunctionC8D90D70",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageFunctionC8D90D70",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterAnalyticalQueryEndpointResourceWaitFunction0790C299",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "VpcDatabaseClusterAnalyticalQueryEndpointResourceWaitFunction0790C299",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkisCompleteServiceRoleDefaultPolicy3F427987",
+    "Roles": [
+     {
+      "Ref": "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkisCompleteServiceRoleCCD8A86A"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkisComplete49779E5D": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "53c95d71cfd280747d971a38505aea07f812fdba75874a090358a2fc4f58f79b.zip"
+    },
+    "Role": {
+     "Fn::GetAtt": [
+      "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkisCompleteServiceRoleCCD8A86A",
+      "Arn"
+     ]
+    },
+    "Description": "AWS CDK resource provider framework - isComplete (DatabaseClusterEndpointStack/Vpc/DatabaseCluster/AnalyticalQueryEndpoint/ResourceManageProvider)",
+    "Environment": {
+     "Variables": {
+      "USER_ON_EVENT_FUNCTION_ARN": {
+       "Fn::GetAtt": [
+        "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageFunctionC8D90D70",
+        "Arn"
+       ]
+      },
+      "USER_IS_COMPLETE_FUNCTION_ARN": {
+       "Fn::GetAtt": [
+        "VpcDatabaseClusterAnalyticalQueryEndpointResourceWaitFunction0790C299",
+        "Arn"
+       ]
+      }
+     }
+    },
+    "Handler": "framework.isComplete",
+    "Runtime": "nodejs14.x",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ],
+    "Timeout": 900
+   },
+   "DependsOn": [
+    "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkisCompleteServiceRoleDefaultPolicy3F427987",
+    "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkisCompleteServiceRoleCCD8A86A"
+   ]
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRole6778CAC2": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRoleDefaultPolicyE0DF0674": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageFunctionC8D90D70",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageFunctionC8D90D70",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterAnalyticalQueryEndpointResourceWaitFunction0790C299",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "VpcDatabaseClusterAnalyticalQueryEndpointResourceWaitFunction0790C299",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRoleDefaultPolicyE0DF0674",
+    "Roles": [
+     {
+      "Ref": "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRole6778CAC2"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeout6C1FF922": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "53c95d71cfd280747d971a38505aea07f812fdba75874a090358a2fc4f58f79b.zip"
+    },
+    "Role": {
+     "Fn::GetAtt": [
+      "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRole6778CAC2",
+      "Arn"
+     ]
+    },
+    "Description": "AWS CDK resource provider framework - onTimeout (DatabaseClusterEndpointStack/Vpc/DatabaseCluster/AnalyticalQueryEndpoint/ResourceManageProvider)",
+    "Environment": {
+     "Variables": {
+      "USER_ON_EVENT_FUNCTION_ARN": {
+       "Fn::GetAtt": [
+        "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageFunctionC8D90D70",
+        "Arn"
+       ]
+      },
+      "USER_IS_COMPLETE_FUNCTION_ARN": {
+       "Fn::GetAtt": [
+        "VpcDatabaseClusterAnalyticalQueryEndpointResourceWaitFunction0790C299",
+        "Arn"
+       ]
+      }
+     }
+    },
+    "Handler": "framework.onTimeout",
+    "Runtime": "nodejs14.x",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ],
+    "Timeout": 900
+   },
+   "DependsOn": [
+    "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRoleDefaultPolicyE0DF0674",
+    "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRole6778CAC2"
+   ]
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderwaiterstatemachineRoleE9920A0A": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": {
+         "Fn::FindInMap": [
+          "ServiceprincipalMap",
+          {
+           "Ref": "AWS::Region"
+          },
+          "states"
+         ]
+        }
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderwaiterstatemachineRoleDefaultPolicy9D60444A": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkisComplete49779E5D",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkisComplete49779E5D",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeout6C1FF922",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeout6C1FF922",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderwaiterstatemachineRoleDefaultPolicy9D60444A",
+    "Roles": [
+     {
+      "Ref": "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderwaiterstatemachineRoleE9920A0A"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderwaiterstatemachine78CB6F3D": {
+   "Type": "AWS::StepFunctions::StateMachine",
+   "Properties": {
+    "DefinitionString": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"StartAt\":\"framework-isComplete-task\",\"States\":{\"framework-isComplete-task\":{\"End\":true,\"Retry\":[{\"ErrorEquals\":[\"States.ALL\"],\"IntervalSeconds\":30,\"MaxAttempts\":10,\"BackoffRate\":1}],\"Catch\":[{\"ErrorEquals\":[\"States.ALL\"],\"Next\":\"framework-onTimeout-task\"}],\"Type\":\"Task\",\"Resource\":\"",
+       {
+        "Fn::GetAtt": [
+         "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkisComplete49779E5D",
+         "Arn"
+        ]
+       },
+       "\"},\"framework-onTimeout-task\":{\"End\":true,\"Type\":\"Task\",\"Resource\":\"",
+       {
+        "Fn::GetAtt": [
+         "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeout6C1FF922",
+         "Arn"
+        ]
+       },
+       "\"}}}"
+      ]
+     ]
+    },
+    "RoleArn": {
+     "Fn::GetAtt": [
+      "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderwaiterstatemachineRoleE9920A0A",
+      "Arn"
+     ]
+    }
+   },
+   "DependsOn": [
+    "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderwaiterstatemachineRoleDefaultPolicy9D60444A",
+    "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderwaiterstatemachineRoleE9920A0A"
+   ]
+  },
+  "VpcDatabaseClusterAnalyticalQueryEndpoint75023E5E": {
+   "Type": "Custom::DBClusterEndpoint",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonEvent7825EF8A",
+      "Arn"
+     ]
+    },
+    "DBClusterEndpointIdentifier": "databaseclusterendpointstacsteranalyticalqueryendpoint0d2f3a26",
+    "DBClusterIdentifier": {
+     "Ref": "VpcDatabaseClusterAA5493E5"
+    },
+    "EndpointType": "READER",
+    "StaticMembers": [
+     {
+      "Ref": "VpcDatabaseClusterInstance4084A1C2D"
+     },
+     {
+      "Ref": "VpcDatabaseClusterInstance5FCEB7BEA"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceManageFunctionServiceRole1A70C7BD": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceManageFunctionServiceRoleDefaultPolicyF3AF2771": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "rds:AddTagsToResource",
+        "rds:CreateDBClusterEndpoint",
+        "rds:DeleteDBClusterEndpoint",
+        "rds:ModifyDBClusterEndpoint"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":rds:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":cluster:",
+           {
+            "Ref": "VpcDatabaseClusterAA5493E5"
+           }
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":rds:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":cluster-endpoint:databaseclusterendpointstaceclusternormalqueryendpoint891f7864"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "VpcDatabaseClusterNormalQueryEndpointResourceManageFunctionServiceRoleDefaultPolicyF3AF2771",
+    "Roles": [
+     {
+      "Ref": "VpcDatabaseClusterNormalQueryEndpointResourceManageFunctionServiceRole1A70C7BD"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceManageFunctionCCC4AAC7": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "04e11cb8a3ea95459c3b5cff687168f44b2c0516d607086fb0cd220ca32c40dc.zip"
+    },
+    "Role": {
+     "Fn::GetAtt": [
+      "VpcDatabaseClusterNormalQueryEndpointResourceManageFunctionServiceRole1A70C7BD",
+      "Arn"
+     ]
+    },
+    "Architectures": [
+     "arm64"
+    ],
+    "Environment": {
+     "Variables": {
+      "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1"
+     }
+    },
+    "Handler": "index.onEvent",
+    "Runtime": "nodejs18.x",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   },
+   "DependsOn": [
+    "VpcDatabaseClusterNormalQueryEndpointResourceManageFunctionServiceRoleDefaultPolicyF3AF2771",
+    "VpcDatabaseClusterNormalQueryEndpointResourceManageFunctionServiceRole1A70C7BD"
+   ]
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceWaitFunctionServiceRoleD18AB167": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceWaitFunctionServiceRoleDefaultPolicyABCA01F5": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "rds:DescribeDBClusterEndpoints",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":rds:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":cluster:",
+           {
+            "Ref": "VpcDatabaseClusterAA5493E5"
+           }
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":rds:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":cluster-endpoint:databaseclusterendpointstaceclusternormalqueryendpoint891f7864"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "VpcDatabaseClusterNormalQueryEndpointResourceWaitFunctionServiceRoleDefaultPolicyABCA01F5",
+    "Roles": [
+     {
+      "Ref": "VpcDatabaseClusterNormalQueryEndpointResourceWaitFunctionServiceRoleD18AB167"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceWaitFunction3A3344EF": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "ae0d1e6760536bfb58a816710fde39ab68c7fa328e3c6ca0be31ad50f7faa8bf.zip"
+    },
+    "Role": {
+     "Fn::GetAtt": [
+      "VpcDatabaseClusterNormalQueryEndpointResourceWaitFunctionServiceRoleD18AB167",
+      "Arn"
+     ]
+    },
+    "Architectures": [
+     "arm64"
+    ],
+    "Environment": {
+     "Variables": {
+      "AWS_NODEJS_CONNECTION_REUSE_ENABLED": "1"
+     }
+    },
+    "Handler": "index.isComplete",
+    "Runtime": "nodejs14.x",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   },
+   "DependsOn": [
+    "VpcDatabaseClusterNormalQueryEndpointResourceWaitFunctionServiceRoleDefaultPolicyABCA01F5",
+    "VpcDatabaseClusterNormalQueryEndpointResourceWaitFunctionServiceRoleD18AB167"
+   ]
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonEventServiceRoleBCAB94C6": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonEventServiceRoleDefaultPolicyB450FF54": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterNormalQueryEndpointResourceManageFunctionCCC4AAC7",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "VpcDatabaseClusterNormalQueryEndpointResourceManageFunctionCCC4AAC7",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterNormalQueryEndpointResourceWaitFunction3A3344EF",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "VpcDatabaseClusterNormalQueryEndpointResourceWaitFunction3A3344EF",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "states:StartExecution",
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderwaiterstatemachine965F36D2"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonEventServiceRoleDefaultPolicyB450FF54",
+    "Roles": [
+     {
+      "Ref": "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonEventServiceRoleBCAB94C6"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonEvent10274689": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "53c95d71cfd280747d971a38505aea07f812fdba75874a090358a2fc4f58f79b.zip"
+    },
+    "Role": {
+     "Fn::GetAtt": [
+      "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonEventServiceRoleBCAB94C6",
+      "Arn"
+     ]
+    },
+    "Description": "AWS CDK resource provider framework - onEvent (DatabaseClusterEndpointStack/Vpc/DatabaseCluster/NormalQueryEndpoint/ResourceManageProvider)",
+    "Environment": {
+     "Variables": {
+      "USER_ON_EVENT_FUNCTION_ARN": {
+       "Fn::GetAtt": [
+        "VpcDatabaseClusterNormalQueryEndpointResourceManageFunctionCCC4AAC7",
+        "Arn"
+       ]
+      },
+      "USER_IS_COMPLETE_FUNCTION_ARN": {
+       "Fn::GetAtt": [
+        "VpcDatabaseClusterNormalQueryEndpointResourceWaitFunction3A3344EF",
+        "Arn"
+       ]
+      },
+      "WAITER_STATE_MACHINE_ARN": {
+       "Ref": "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderwaiterstatemachine965F36D2"
+      }
+     }
+    },
+    "Handler": "framework.onEvent",
+    "Runtime": "nodejs14.x",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ],
+    "Timeout": 900
+   },
+   "DependsOn": [
+    "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonEventServiceRoleDefaultPolicyB450FF54",
+    "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonEventServiceRoleBCAB94C6"
+   ]
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkisCompleteServiceRole6FBC3C9B": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkisCompleteServiceRoleDefaultPolicyDE435754": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterNormalQueryEndpointResourceManageFunctionCCC4AAC7",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "VpcDatabaseClusterNormalQueryEndpointResourceManageFunctionCCC4AAC7",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterNormalQueryEndpointResourceWaitFunction3A3344EF",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "VpcDatabaseClusterNormalQueryEndpointResourceWaitFunction3A3344EF",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkisCompleteServiceRoleDefaultPolicyDE435754",
+    "Roles": [
+     {
+      "Ref": "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkisCompleteServiceRole6FBC3C9B"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkisComplete96B89467": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "53c95d71cfd280747d971a38505aea07f812fdba75874a090358a2fc4f58f79b.zip"
+    },
+    "Role": {
+     "Fn::GetAtt": [
+      "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkisCompleteServiceRole6FBC3C9B",
+      "Arn"
+     ]
+    },
+    "Description": "AWS CDK resource provider framework - isComplete (DatabaseClusterEndpointStack/Vpc/DatabaseCluster/NormalQueryEndpoint/ResourceManageProvider)",
+    "Environment": {
+     "Variables": {
+      "USER_ON_EVENT_FUNCTION_ARN": {
+       "Fn::GetAtt": [
+        "VpcDatabaseClusterNormalQueryEndpointResourceManageFunctionCCC4AAC7",
+        "Arn"
+       ]
+      },
+      "USER_IS_COMPLETE_FUNCTION_ARN": {
+       "Fn::GetAtt": [
+        "VpcDatabaseClusterNormalQueryEndpointResourceWaitFunction3A3344EF",
+        "Arn"
+       ]
+      }
+     }
+    },
+    "Handler": "framework.isComplete",
+    "Runtime": "nodejs14.x",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ],
+    "Timeout": 900
+   },
+   "DependsOn": [
+    "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkisCompleteServiceRoleDefaultPolicyDE435754",
+    "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkisCompleteServiceRole6FBC3C9B"
+   ]
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRoleAD857C3E": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRoleDefaultPolicyF589C8E8": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterNormalQueryEndpointResourceManageFunctionCCC4AAC7",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "VpcDatabaseClusterNormalQueryEndpointResourceManageFunctionCCC4AAC7",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterNormalQueryEndpointResourceWaitFunction3A3344EF",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "VpcDatabaseClusterNormalQueryEndpointResourceWaitFunction3A3344EF",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRoleDefaultPolicyF589C8E8",
+    "Roles": [
+     {
+      "Ref": "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRoleAD857C3E"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeout4CF819AC": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "53c95d71cfd280747d971a38505aea07f812fdba75874a090358a2fc4f58f79b.zip"
+    },
+    "Role": {
+     "Fn::GetAtt": [
+      "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRoleAD857C3E",
+      "Arn"
+     ]
+    },
+    "Description": "AWS CDK resource provider framework - onTimeout (DatabaseClusterEndpointStack/Vpc/DatabaseCluster/NormalQueryEndpoint/ResourceManageProvider)",
+    "Environment": {
+     "Variables": {
+      "USER_ON_EVENT_FUNCTION_ARN": {
+       "Fn::GetAtt": [
+        "VpcDatabaseClusterNormalQueryEndpointResourceManageFunctionCCC4AAC7",
+        "Arn"
+       ]
+      },
+      "USER_IS_COMPLETE_FUNCTION_ARN": {
+       "Fn::GetAtt": [
+        "VpcDatabaseClusterNormalQueryEndpointResourceWaitFunction3A3344EF",
+        "Arn"
+       ]
+      }
+     }
+    },
+    "Handler": "framework.onTimeout",
+    "Runtime": "nodejs14.x",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ],
+    "Timeout": 900
+   },
+   "DependsOn": [
+    "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRoleDefaultPolicyF589C8E8",
+    "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRoleAD857C3E"
+   ]
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderwaiterstatemachineRole6A7B9BA7": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": {
+         "Fn::FindInMap": [
+          "ServiceprincipalMap",
+          {
+           "Ref": "AWS::Region"
+          },
+          "states"
+         ]
+        }
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "DatabaseClusterEndpointStack/Vpc"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderwaiterstatemachineRoleDefaultPolicyB01E0919": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkisComplete96B89467",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkisComplete96B89467",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeout4CF819AC",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeout4CF819AC",
+             "Arn"
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderwaiterstatemachineRoleDefaultPolicyB01E0919",
+    "Roles": [
+     {
+      "Ref": "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderwaiterstatemachineRole6A7B9BA7"
+     }
+    ]
+   }
+  },
+  "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderwaiterstatemachine965F36D2": {
+   "Type": "AWS::StepFunctions::StateMachine",
+   "Properties": {
+    "DefinitionString": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"StartAt\":\"framework-isComplete-task\",\"States\":{\"framework-isComplete-task\":{\"End\":true,\"Retry\":[{\"ErrorEquals\":[\"States.ALL\"],\"IntervalSeconds\":30,\"MaxAttempts\":10,\"BackoffRate\":1}],\"Catch\":[{\"ErrorEquals\":[\"States.ALL\"],\"Next\":\"framework-onTimeout-task\"}],\"Type\":\"Task\",\"Resource\":\"",
+       {
+        "Fn::GetAtt": [
+         "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkisComplete96B89467",
+         "Arn"
+        ]
+       },
+       "\"},\"framework-onTimeout-task\":{\"End\":true,\"Type\":\"Task\",\"Resource\":\"",
+       {
+        "Fn::GetAtt": [
+         "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeout4CF819AC",
+         "Arn"
+        ]
+       },
+       "\"}}}"
+      ]
+     ]
+    },
+    "RoleArn": {
+     "Fn::GetAtt": [
+      "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderwaiterstatemachineRole6A7B9BA7",
+      "Arn"
+     ]
+    }
+   },
+   "DependsOn": [
+    "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderwaiterstatemachineRoleDefaultPolicyB01E0919",
+    "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderwaiterstatemachineRole6A7B9BA7"
+   ]
+  },
+  "VpcDatabaseClusterNormalQueryEndpoint2F22A8B8": {
+   "Type": "Custom::DBClusterEndpoint",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonEvent10274689",
+      "Arn"
+     ]
+    },
+    "DBClusterEndpointIdentifier": "databaseclusterendpointstaceclusternormalqueryendpoint891f7864",
+    "DBClusterIdentifier": {
+     "Ref": "VpcDatabaseClusterAA5493E5"
+    },
+    "EndpointType": "READER",
+    "ExcludedMembers": [
+     {
+      "Ref": "VpcDatabaseClusterInstance4084A1C2D"
+     },
+     {
+      "Ref": "VpcDatabaseClusterInstance5FCEB7BEA"
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  }
+ },
+ "Mappings": {
+  "ServiceprincipalMap": {
+   "af-south-1": {
+    "states": "states.af-south-1.amazonaws.com"
+   },
+   "ap-east-1": {
+    "states": "states.ap-east-1.amazonaws.com"
+   },
+   "ap-northeast-1": {
+    "states": "states.ap-northeast-1.amazonaws.com"
+   },
+   "ap-northeast-2": {
+    "states": "states.ap-northeast-2.amazonaws.com"
+   },
+   "ap-northeast-3": {
+    "states": "states.ap-northeast-3.amazonaws.com"
+   },
+   "ap-south-1": {
+    "states": "states.ap-south-1.amazonaws.com"
+   },
+   "ap-south-2": {
+    "states": "states.ap-south-2.amazonaws.com"
+   },
+   "ap-southeast-1": {
+    "states": "states.ap-southeast-1.amazonaws.com"
+   },
+   "ap-southeast-2": {
+    "states": "states.ap-southeast-2.amazonaws.com"
+   },
+   "ap-southeast-3": {
+    "states": "states.ap-southeast-3.amazonaws.com"
+   },
+   "ca-central-1": {
+    "states": "states.ca-central-1.amazonaws.com"
+   },
+   "cn-north-1": {
+    "states": "states.cn-north-1.amazonaws.com"
+   },
+   "cn-northwest-1": {
+    "states": "states.cn-northwest-1.amazonaws.com"
+   },
+   "eu-central-1": {
+    "states": "states.eu-central-1.amazonaws.com"
+   },
+   "eu-central-2": {
+    "states": "states.eu-central-2.amazonaws.com"
+   },
+   "eu-north-1": {
+    "states": "states.eu-north-1.amazonaws.com"
+   },
+   "eu-south-1": {
+    "states": "states.eu-south-1.amazonaws.com"
+   },
+   "eu-south-2": {
+    "states": "states.eu-south-2.amazonaws.com"
+   },
+   "eu-west-1": {
+    "states": "states.eu-west-1.amazonaws.com"
+   },
+   "eu-west-2": {
+    "states": "states.eu-west-2.amazonaws.com"
+   },
+   "eu-west-3": {
+    "states": "states.eu-west-3.amazonaws.com"
+   },
+   "me-central-1": {
+    "states": "states.me-central-1.amazonaws.com"
+   },
+   "me-south-1": {
+    "states": "states.me-south-1.amazonaws.com"
+   },
+   "sa-east-1": {
+    "states": "states.sa-east-1.amazonaws.com"
+   },
+   "us-east-1": {
+    "states": "states.us-east-1.amazonaws.com"
+   },
+   "us-east-2": {
+    "states": "states.us-east-2.amazonaws.com"
+   },
+   "us-gov-east-1": {
+    "states": "states.us-gov-east-1.amazonaws.com"
+   },
+   "us-gov-west-1": {
+    "states": "states.us-gov-west-1.amazonaws.com"
+   },
+   "us-iso-east-1": {
+    "states": "states.amazonaws.com"
+   },
+   "us-iso-west-1": {
+    "states": "states.amazonaws.com"
+   },
+   "us-isob-east-1": {
+    "states": "states.amazonaws.com"
+   },
+   "us-west-1": {
+    "states": "states.us-west-1.amazonaws.com"
+   },
+   "us-west-2": {
+    "states": "states.us-west-2.amazonaws.com"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}
