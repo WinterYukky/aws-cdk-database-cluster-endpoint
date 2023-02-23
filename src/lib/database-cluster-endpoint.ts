@@ -165,13 +165,15 @@ export class DatabaseClusterEndpoint extends Resource {
       props.members?.type === DatabaseClusterEndpointMemberType.INCLUDE
         ? props.members.identifiers
         : undefined;
-    onEventHandler ??= new SingletonFunction(this, 'ResourceManageFunction', {
-      runtime: Runtime.NODEJS_18_X,
-      code: Code.fromAsset(join(__dirname, 'wait-for-action-finish')),
-      handler: 'index.onEvent',
-      uuid: '7ebee0fa-b9cc-4ef6-8ded-0294ad649bf7',
-      architecture: Architecture.ARM_64,
-    });
+    if (!onEventHandler) {
+      onEventHandler = new SingletonFunction(this, 'ResourceManageFunction', {
+        runtime: Runtime.NODEJS_18_X,
+        code: Code.fromAsset(join(__dirname, 'wait-for-action-finish')),
+        handler: 'index.onEvent',
+        uuid: '7ebee0fa-b9cc-4ef6-8ded-0294ad649bf7',
+        architecture: Architecture.ARM_64,
+      });
+    }
     onEventHandler.addToRolePolicy(
       new PolicyStatement({
         actions: [
@@ -202,13 +204,15 @@ export class DatabaseClusterEndpoint extends Resource {
         ],
       })
     );
-    isCompleteHandler ??= new SingletonFunction(this, 'ResourceWaitFunction', {
-      runtime: Runtime.NODEJS_18_X,
-      code: Code.fromAsset(join(__dirname, 'wait-for-action-finish')),
-      handler: 'index.isComplete',
-      architecture: Architecture.ARM_64,
-      uuid: 'c061108a-4752-4df0-8bbb-08c172a86d19',
-    });
+    if (!isCompleteHandler) {
+      isCompleteHandler = new SingletonFunction(this, 'ResourceWaitFunction', {
+        runtime: Runtime.NODEJS_18_X,
+        code: Code.fromAsset(join(__dirname, 'wait-for-action-finish')),
+        handler: 'index.isComplete',
+        architecture: Architecture.ARM_64,
+        uuid: 'c061108a-4752-4df0-8bbb-08c172a86d19',
+      });
+    }
     isCompleteHandler.addToRolePolicy(
       new PolicyStatement({
         actions: ['rds:DescribeDBClusterEndpoints'],
