@@ -10,8 +10,12 @@ import {
   Stack,
 } from 'aws-cdk-lib';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
-import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import {
+  Architecture,
+  Code,
+  Runtime,
+  SingletonFunction,
+} from 'aws-cdk-lib/aws-lambda';
 import { Endpoint, IDatabaseCluster } from 'aws-cdk-lib/aws-rds';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
@@ -164,14 +168,12 @@ export class DatabaseClusterEndpoint extends Resource {
       this,
       'ResourceManageProvider',
       {
-        onEventHandler: new NodejsFunction(this, 'ResourceManageFunction', {
+        onEventHandler: new SingletonFunction(this, 'ResourceManageFunction', {
           runtime: Runtime.NODEJS_18_X,
-          entry: join(__dirname, 'wait-for-action-finish/index.ts'),
-          handler: 'onEvent',
+          code: Code.fromAsset(join(__dirname, 'wait-for-action-finish')),
+          handler: 'index.onEvent',
+          uuid: '7ebee0fa-b9cc-4ef6-8ded-0294ad649bf7',
           architecture: Architecture.ARM_64,
-          bundling: {
-            externalModules: ['@aws-sdk/client-rds'],
-          },
           initialPolicy: [
             new PolicyStatement({
               actions: [
@@ -203,10 +205,12 @@ export class DatabaseClusterEndpoint extends Resource {
             }),
           ],
         }),
-        isCompleteHandler: new NodejsFunction(this, 'ResourceWaitFunction', {
-          entry: join(__dirname, 'wait-for-action-finish/index.ts'),
-          handler: 'isComplete',
+        isCompleteHandler: new SingletonFunction(this, 'ResourceWaitFunction', {
+          runtime: Runtime.NODEJS_18_X,
+          code: Code.fromAsset(join(__dirname, 'wait-for-action-finish')),
+          handler: 'index.isComplete',
           architecture: Architecture.ARM_64,
+          uuid: 'c061108a-4752-4df0-8bbb-08c172a86d19',
           initialPolicy: [
             new PolicyStatement({
               actions: ['rds:DescribeDBClusterEndpoints'],
