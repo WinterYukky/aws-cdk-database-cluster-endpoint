@@ -5,7 +5,7 @@ import {
   DatabaseClusterEndpoint,
   DatabaseClusterEndpointMember,
   DatabaseClusterEndpointType,
-} from './database-cluster-endpoint';
+} from '../src/lib/database-cluster-endpoint';
 
 const app = new cdk.App();
 const stack = new cdk.Stack(app, 'DatabaseClusterEndpointStack');

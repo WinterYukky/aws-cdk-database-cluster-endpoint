@@ -28,6 +28,5 @@ const project = new awscdk.AwsCdkConstructLibrary({
     '@types/aws-lambda',
   ] /* Build dependencies for this module. */,
   // packageName: undefined,  /* The "name" in package.json. */
-  testdir: 'src/lib',
 });
 project.synth();
