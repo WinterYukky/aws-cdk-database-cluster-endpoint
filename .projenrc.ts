@@ -27,6 +27,16 @@ const project = new awscdk.AwsCdkConstructLibrary({
     '@aws-sdk/client-rds',
     '@types/aws-lambda',
   ] /* Build dependencies for this module. */,
+  gitignore: ['src/lib/**/*.js'],
   // packageName: undefined,  /* The "name" in package.json. */
 });
+
+// complie the custom resource Lambda functions
+const complieCustomResourceCommand =
+  'yarn esbuild src/lib/wait-for-action-finish/index.ts --bundle --outdir=src/lib/wait-for-action-finish/ --platform=node --external:@aws-sdk/client-rds';
+project.preCompileTask.exec(complieCustomResourceCommand);
+project.testTask.prependExec(complieCustomResourceCommand);
+project.tasks.all
+  .filter((task) => task.name.startsWith('integ:'))
+  .forEach((task) => task.prependExec(complieCustomResourceCommand));
 project.synth();

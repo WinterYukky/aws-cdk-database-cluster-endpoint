@@ -10,8 +10,12 @@ import {
   Stack,
 } from 'aws-cdk-lib';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
-import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
-import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import {
+  Architecture,
+  Code,
+  Runtime,
+  SingletonFunction,
+} from 'aws-cdk-lib/aws-lambda';
 import { Endpoint, IDatabaseCluster } from 'aws-cdk-lib/aws-rds';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
@@ -126,6 +130,8 @@ export interface DatabaseClusterEndpointProps {
   readonly endpointType?: DatabaseClusterEndpointType;
 }
 
+let onEventHandler: SingletonFunction;
+let isCompleteHandler: SingletonFunction;
 /**
  * Creates a new custom endpoint and associates it with an Amazon Aurora DB cluster.
  *
@@ -159,80 +165,85 @@ export class DatabaseClusterEndpoint extends Resource {
       props.members?.type === DatabaseClusterEndpointMemberType.INCLUDE
         ? props.members.identifiers
         : undefined;
-
+    if (!onEventHandler) {
+      onEventHandler = new SingletonFunction(this, 'ResourceManageFunction', {
+        runtime: Runtime.NODEJS_18_X,
+        code: Code.fromAsset(join(__dirname, 'wait-for-action-finish')),
+        handler: 'index.onEvent',
+        uuid: '7ebee0fa-b9cc-4ef6-8ded-0294ad649bf7',
+        architecture: Architecture.ARM_64,
+      });
+    }
+    onEventHandler.addToRolePolicy(
+      new PolicyStatement({
+        actions: [
+          'rds:AddTagsToResource',
+          'rds:CreateDBClusterEndpoint',
+          'rds:DeleteDBClusterEndpoint',
+          'rds:ModifyDBClusterEndpoint',
+        ],
+        resources: [
+          Arn.format(
+            {
+              service: 'rds',
+              resource: 'cluster',
+              resourceName: props.cluster.clusterIdentifier,
+              arnFormat: ArnFormat.COLON_RESOURCE_NAME,
+            },
+            Stack.of(this)
+          ),
+          Arn.format(
+            {
+              service: 'rds',
+              resource: 'cluster-endpoint',
+              resourceName: this.physicalName,
+              arnFormat: ArnFormat.COLON_RESOURCE_NAME,
+            },
+            Stack.of(this)
+          ),
+        ],
+      })
+    );
+    if (!isCompleteHandler) {
+      isCompleteHandler = new SingletonFunction(this, 'ResourceWaitFunction', {
+        runtime: Runtime.NODEJS_18_X,
+        code: Code.fromAsset(join(__dirname, 'wait-for-action-finish')),
+        handler: 'index.isComplete',
+        architecture: Architecture.ARM_64,
+        uuid: 'c061108a-4752-4df0-8bbb-08c172a86d19',
+      });
+    }
+    isCompleteHandler.addToRolePolicy(
+      new PolicyStatement({
+        actions: ['rds:DescribeDBClusterEndpoints'],
+        resources: [
+          Arn.format(
+            {
+              service: 'rds',
+              resource: 'cluster',
+              resourceName: props.cluster.clusterIdentifier,
+              arnFormat: ArnFormat.COLON_RESOURCE_NAME,
+            },
+            Stack.of(this)
+          ),
+          Arn.format(
+            {
+              service: 'rds',
+              resource: 'cluster-endpoint',
+              resourceName: this.physicalName,
+              arnFormat: ArnFormat.COLON_RESOURCE_NAME,
+            },
+            Stack.of(this)
+          ),
+        ],
+      })
+    );
     const resourceManageProvider = new Provider(
       this,
       'ResourceManageProvider',
       {
-        onEventHandler: new NodejsFunction(this, 'ResourceManageFunction', {
-          runtime: Runtime.NODEJS_18_X,
-          entry: join(__dirname, 'wait-for-action-finish/index.ts'),
-          handler: 'onEvent',
-          architecture: Architecture.ARM_64,
-          bundling: {
-            externalModules: ['@aws-sdk/client-rds'],
-          },
-          initialPolicy: [
-            new PolicyStatement({
-              actions: [
-                'rds:AddTagsToResource',
-                'rds:CreateDBClusterEndpoint',
-                'rds:DeleteDBClusterEndpoint',
-                'rds:ModifyDBClusterEndpoint',
-              ],
-              resources: [
-                Arn.format(
-                  {
-                    service: 'rds',
-                    resource: 'cluster',
-                    resourceName: props.cluster.clusterIdentifier,
-                    arnFormat: ArnFormat.COLON_RESOURCE_NAME,
-                  },
-                  Stack.of(this)
-                ),
-                Arn.format(
-                  {
-                    service: 'rds',
-                    resource: 'cluster-endpoint',
-                    resourceName: this.physicalName,
-                    arnFormat: ArnFormat.COLON_RESOURCE_NAME,
-                  },
-                  Stack.of(this)
-                ),
-              ],
-            }),
-          ],
-        }),
-        isCompleteHandler: new NodejsFunction(this, 'ResourceWaitFunction', {
-          entry: join(__dirname, 'wait-for-action-finish/index.ts'),
-          handler: 'isComplete',
-          architecture: Architecture.ARM_64,
-          initialPolicy: [
-            new PolicyStatement({
-              actions: ['rds:DescribeDBClusterEndpoints'],
-              resources: [
-                Arn.format(
-                  {
-                    service: 'rds',
-                    resource: 'cluster',
-                    resourceName: props.cluster.clusterIdentifier,
-                    arnFormat: ArnFormat.COLON_RESOURCE_NAME,
-                  },
-                  Stack.of(this)
-                ),
-                Arn.format(
-                  {
-                    service: 'rds',
-                    resource: 'cluster-endpoint',
-                    resourceName: this.physicalName,
-                    arnFormat: ArnFormat.COLON_RESOURCE_NAME,
-                  },
-                  Stack.of(this)
-                ),
-              ],
-            }),
-          ],
-        }),
+        onEventHandler,
+        isCompleteHandler,
         queryInterval: Duration.seconds(30),
         totalTimeout: Duration.minutes(5),
       }

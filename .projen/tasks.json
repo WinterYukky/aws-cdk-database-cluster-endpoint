@@ -135,6 +135,9 @@
       "description": "assert the snapshot of integration test 'database-cluster-endpoint'",
       "steps": [
         {
+          "exec": "yarn esbuild src/lib/wait-for-action-finish/index.ts --bundle --outdir=src/lib/wait-for-action-finish/ --platform=node --external:@aws-sdk/client-rds"
+        },
+        {
           "exec": "[ -d \"test/database-cluster-endpoint.integ.snapshot\" ] || (echo \"No snapshot available for integration test 'database-cluster-endpoint'. Run 'projen integ:database-cluster-endpoint:deploy' to capture.\" && exit 1)"
         },
         {
@@ -149,6 +152,9 @@
       "name": "integ:database-cluster-endpoint:deploy",
       "description": "deploy integration test 'database-cluster-endpoint' and capture snapshot",
       "steps": [
+        {
+          "exec": "yarn esbuild src/lib/wait-for-action-finish/index.ts --bundle --outdir=src/lib/wait-for-action-finish/ --platform=node --external:@aws-sdk/client-rds"
+        },
         {
           "exec": "rm -fr test/.tmp/database-cluster-endpoint.integ/deploy.cdk.out"
         },
@@ -171,6 +177,9 @@
       "description": "destroy integration test 'database-cluster-endpoint'",
       "steps": [
         {
+          "exec": "yarn esbuild src/lib/wait-for-action-finish/index.ts --bundle --outdir=src/lib/wait-for-action-finish/ --platform=node --external:@aws-sdk/client-rds"
+        },
+        {
           "exec": "cdk destroy --app test/database-cluster-endpoint.integ.snapshot '**' --no-version-reporting"
         }
       ]
@@ -179,6 +188,9 @@
       "name": "integ:database-cluster-endpoint:snapshot",
       "description": "update snapshot for integration test \"database-cluster-endpoint\"",
       "steps": [
+        {
+          "exec": "yarn esbuild src/lib/wait-for-action-finish/index.ts --bundle --outdir=src/lib/wait-for-action-finish/ --platform=node --external:@aws-sdk/client-rds"
+        },
         {
           "exec": "cdk synth --app \"ts-node -P tsconfig.dev.json test/database-cluster-endpoint.integ.ts\" --no-notices --no-version-reporting --no-asset-metadata --no-path-metadata -o test/database-cluster-endpoint.integ.snapshot > /dev/null"
         }
@@ -189,6 +201,9 @@
       "description": "watch integration test 'database-cluster-endpoint' (without updating snapshots)",
       "steps": [
         {
+          "exec": "yarn esbuild src/lib/wait-for-action-finish/index.ts --bundle --outdir=src/lib/wait-for-action-finish/ --platform=node --external:@aws-sdk/client-rds"
+        },
+        {
           "exec": "cdk watch --app \"ts-node -P tsconfig.dev.json test/database-cluster-endpoint.integ.ts\" --no-notices --no-version-reporting --no-asset-metadata --no-path-metadata '**' -o test/.tmp/database-cluster-endpoint.integ/deploy.cdk.out"
         }
       ]
@@ -197,6 +212,9 @@
       "name": "integ:snapshot-all",
       "description": "update snapshot for all integration tests",
       "steps": [
+        {
+          "exec": "yarn esbuild src/lib/wait-for-action-finish/index.ts --bundle --outdir=src/lib/wait-for-action-finish/ --platform=node --external:@aws-sdk/client-rds"
+        },
         {
           "spawn": "integ:database-cluster-endpoint:snapshot"
         }
@@ -244,7 +262,12 @@
     },
     "pre-compile": {
       "name": "pre-compile",
-      "description": "Prepare the project for compilation"
+      "description": "Prepare the project for compilation",
+      "steps": [
+        {
+          "exec": "yarn esbuild src/lib/wait-for-action-finish/index.ts --bundle --outdir=src/lib/wait-for-action-finish/ --platform=node --external:@aws-sdk/client-rds"
+        }
+      ]
     },
     "release": {
       "name": "release",
@@ -274,6 +297,9 @@
       "name": "test",
       "description": "Run tests",
       "steps": [
+        {
+          "exec": "yarn esbuild src/lib/wait-for-action-finish/index.ts --bundle --outdir=src/lib/wait-for-action-finish/ --platform=node --external:@aws-sdk/client-rds"
+        },
         {
           "exec": "jest --passWithNoTests --updateSnapshot",
           "receiveArgs": true
