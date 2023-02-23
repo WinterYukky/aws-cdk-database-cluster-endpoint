@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
 import {
   CreateDBClusterEndpointCommand,
   CreateDBClusterEndpointCommandInput,
@@ -6,6 +7,7 @@ import {
   ModifyDBClusterEndpointCommand,
   RDSClient,
 } from '@aws-sdk/client-rds';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import {
   CdkCustomResourceHandler,
   CdkCustomResourceIsCompleteHandler,
