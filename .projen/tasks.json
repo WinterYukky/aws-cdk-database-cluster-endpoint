@@ -126,7 +126,7 @@
       "description": "Runs eslint against the codebase",
       "steps": [
         {
-          "exec": "eslint --ext .ts,.tsx --fix --no-error-on-unmatched-pattern src src/lib build-tools projenrc .projenrc.ts"
+          "exec": "eslint --ext .ts,.tsx --fix --no-error-on-unmatched-pattern src test build-tools projenrc .projenrc.ts"
         }
       ]
     },
@@ -135,13 +135,13 @@
       "description": "assert the snapshot of integration test 'database-cluster-endpoint'",
       "steps": [
         {
-          "exec": "[ -d \"src/lib/database-cluster-endpoint.integ.snapshot\" ] || (echo \"No snapshot available for integration test 'database-cluster-endpoint'. Run 'projen integ:database-cluster-endpoint:deploy' to capture.\" && exit 1)"
+          "exec": "[ -d \"test/database-cluster-endpoint.integ.snapshot\" ] || (echo \"No snapshot available for integration test 'database-cluster-endpoint'. Run 'projen integ:database-cluster-endpoint:deploy' to capture.\" && exit 1)"
         },
         {
-          "exec": "cdk synth --app \"ts-node -P tsconfig.dev.json src/lib/database-cluster-endpoint.integ.ts\" --no-notices --no-version-reporting --no-asset-metadata --no-path-metadata -o src/lib/.tmp/database-cluster-endpoint.integ/assert.cdk.out > /dev/null"
+          "exec": "cdk synth --app \"ts-node -P tsconfig.dev.json test/database-cluster-endpoint.integ.ts\" --no-notices --no-version-reporting --no-asset-metadata --no-path-metadata -o test/.tmp/database-cluster-endpoint.integ/assert.cdk.out > /dev/null"
         },
         {
-          "exec": "diff -r -x asset.* -x cdk.out -x manifest.json -x tree.json src/lib/database-cluster-endpoint.integ.snapshot/ src/lib/.tmp/database-cluster-endpoint.integ/assert.cdk.out/"
+          "exec": "diff -r -x asset.* -x cdk.out -x manifest.json -x tree.json test/database-cluster-endpoint.integ.snapshot/ test/.tmp/database-cluster-endpoint.integ/assert.cdk.out/"
         }
       ]
     },
@@ -150,16 +150,16 @@
       "description": "deploy integration test 'database-cluster-endpoint' and capture snapshot",
       "steps": [
         {
-          "exec": "rm -fr src/lib/.tmp/database-cluster-endpoint.integ/deploy.cdk.out"
+          "exec": "rm -fr test/.tmp/database-cluster-endpoint.integ/deploy.cdk.out"
         },
         {
-          "exec": "cdk deploy --app \"ts-node -P tsconfig.dev.json src/lib/database-cluster-endpoint.integ.ts\" --no-notices --no-version-reporting --no-asset-metadata --no-path-metadata '**' --require-approval=never -o src/lib/.tmp/database-cluster-endpoint.integ/deploy.cdk.out"
+          "exec": "cdk deploy --app \"ts-node -P tsconfig.dev.json test/database-cluster-endpoint.integ.ts\" --no-notices --no-version-reporting --no-asset-metadata --no-path-metadata '**' --require-approval=never -o test/.tmp/database-cluster-endpoint.integ/deploy.cdk.out"
         },
         {
-          "exec": "rm -fr src/lib/database-cluster-endpoint.integ.snapshot"
+          "exec": "rm -fr test/database-cluster-endpoint.integ.snapshot"
         },
         {
-          "exec": "mv src/lib/.tmp/database-cluster-endpoint.integ/deploy.cdk.out src/lib/database-cluster-endpoint.integ.snapshot"
+          "exec": "mv test/.tmp/database-cluster-endpoint.integ/deploy.cdk.out test/database-cluster-endpoint.integ.snapshot"
         },
         {
           "spawn": "integ:database-cluster-endpoint:destroy"
@@ -171,7 +171,7 @@
       "description": "destroy integration test 'database-cluster-endpoint'",
       "steps": [
         {
-          "exec": "cdk destroy --app src/lib/database-cluster-endpoint.integ.snapshot '**' --no-version-reporting"
+          "exec": "cdk destroy --app test/database-cluster-endpoint.integ.snapshot '**' --no-version-reporting"
         }
       ]
     },
@@ -180,7 +180,7 @@
       "description": "update snapshot for integration test \"database-cluster-endpoint\"",
       "steps": [
         {
-          "exec": "cdk synth --app \"ts-node -P tsconfig.dev.json src/lib/database-cluster-endpoint.integ.ts\" --no-notices --no-version-reporting --no-asset-metadata --no-path-metadata -o src/lib/database-cluster-endpoint.integ.snapshot > /dev/null"
+          "exec": "cdk synth --app \"ts-node -P tsconfig.dev.json test/database-cluster-endpoint.integ.ts\" --no-notices --no-version-reporting --no-asset-metadata --no-path-metadata -o test/database-cluster-endpoint.integ.snapshot > /dev/null"
         }
       ]
     },
@@ -189,7 +189,7 @@
       "description": "watch integration test 'database-cluster-endpoint' (without updating snapshots)",
       "steps": [
         {
-          "exec": "cdk watch --app \"ts-node -P tsconfig.dev.json src/lib/database-cluster-endpoint.integ.ts\" --no-notices --no-version-reporting --no-asset-metadata --no-path-metadata '**' -o src/lib/.tmp/database-cluster-endpoint.integ/deploy.cdk.out"
+          "exec": "cdk watch --app \"ts-node -P tsconfig.dev.json test/database-cluster-endpoint.integ.ts\" --no-notices --no-version-reporting --no-asset-metadata --no-path-metadata '**' -o test/.tmp/database-cluster-endpoint.integ/deploy.cdk.out"
         }
       ]
     },

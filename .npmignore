@@ -7,7 +7,7 @@ permissions-backup.acl
 /dist/changelog.md
 /dist/version.txt
 /.mergify.yml
-/src/lib/
+/test/
 /tsconfig.dev.json
 /src/
 !/lib/
@@ -20,8 +20,7 @@ dist
 /.idea/
 /.projenrc.js
 tsconfig.tsbuildinfo
-/lib/lib/
 /.eslintrc.json
 !.jsii
-src/lib/.tmp
-src/lib/database-cluster-endpoint.integ.snapshot
+test/.tmp
+test/database-cluster-endpoint.integ.snapshot

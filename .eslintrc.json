@@ -57,7 +57,7 @@
       "error",
       {
         "devDependencies": [
-          "**/src/lib/**",
+          "**/test/**",
           "**/build-tools/**",
           "**/projenrc/**",
           ".projenrc.ts",

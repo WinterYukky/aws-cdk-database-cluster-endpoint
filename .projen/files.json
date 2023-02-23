@@ -13,7 +13,6 @@
     ".prettierrc.json",
     ".projen/deps.json",
     ".projen/files.json",
-    ".projen/jest-snapshot-resolver.js",
     ".projen/tasks.json",
     "LICENSE",
     "tsconfig.dev.json"
