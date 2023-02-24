@@ -170,8 +170,9 @@ export class DatabaseClusterEndpoint extends Resource {
         runtime: Runtime.NODEJS_18_X,
         code: Code.fromAsset(join(__dirname, 'wait-for-action-finish')),
         handler: 'index.onEvent',
-        uuid: '7ebee0fa-b9cc-4ef6-8ded-0294ad649bf7',
         architecture: Architecture.ARM_64,
+        timeout: Duration.minutes(15),
+        uuid: '7ebee0fa-b9cc-4ef6-8ded-0294ad649bf7',
       });
     }
     onEventHandler.addToRolePolicy(
@@ -210,6 +211,7 @@ export class DatabaseClusterEndpoint extends Resource {
         code: Code.fromAsset(join(__dirname, 'wait-for-action-finish')),
         handler: 'index.isComplete',
         architecture: Architecture.ARM_64,
+        timeout: Duration.minutes(15),
         uuid: 'c061108a-4752-4df0-8bbb-08c172a86d19',
       });
     }
