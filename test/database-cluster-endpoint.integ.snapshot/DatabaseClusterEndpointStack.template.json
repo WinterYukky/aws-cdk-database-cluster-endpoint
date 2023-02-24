@@ -1999,7 +1999,8 @@
      "arm64"
     ],
     "Handler": "index.onEvent",
-    "Runtime": "nodejs18.x"
+    "Runtime": "nodejs18.x",
+    "Timeout": 900
    },
    "DependsOn": [
     "SingletonLambda7ebee0fab9cc4ef68ded0294ad649bf7ServiceRoleDefaultPolicy208BB18C",
@@ -2170,7 +2171,8 @@
      "arm64"
     ],
     "Handler": "index.isComplete",
-    "Runtime": "nodejs18.x"
+    "Runtime": "nodejs18.x",
+    "Timeout": 900
    },
    "DependsOn": [
     "SingletonLambdac061108a47524df08bbb08c172a86d19ServiceRoleDefaultPolicy2A4A2487",
