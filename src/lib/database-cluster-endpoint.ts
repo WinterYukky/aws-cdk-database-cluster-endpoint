@@ -247,7 +247,6 @@ export class DatabaseClusterEndpoint extends Resource {
         onEventHandler,
         isCompleteHandler,
         queryInterval: Duration.seconds(30),
-        totalTimeout: Duration.minutes(5),
       }
     );
     this.resource = new CustomResource(this, 'Resource', {
