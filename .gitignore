@@ -31,7 +31,6 @@ jspm_packages/
 .yarn-integrity
 .cache
 src/lib/**/*.js
-!/.projenrc.js
 /test-reports/
 junit.xml
 /coverage/
@@ -62,3 +61,4 @@ test/database-cluster-endpoint.integ.snapshot/manifest.json
 test/database-cluster-endpoint.integ.snapshot/**/manifest.json
 test/database-cluster-endpoint.integ.snapshot/tree.json
 test/database-cluster-endpoint.integ.snapshot/**/tree.json
+!/.projenrc.ts
