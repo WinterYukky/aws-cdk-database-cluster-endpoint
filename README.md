@@ -93,6 +93,70 @@ An example of creating each read-only custom endpoint follows.
 
 ![example architecture](./docs/example-architecture.svg)
 
+### Use Current DatabaseCluster
+
+This is an example using the current `rds.DatabaseClusrer` definition method. Recommend this pattern.
+
+```ts
+import * as cdk from 'aws-cdk-lib';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
+import * as rds from 'aws-cdk-lib/aws-rds';
+
+const app = new cdk.App();
+const stack = new cdk.Stack(app, 'DatabaseClusterEndpointStack');
+
+const vpc = new ec2.Vpc(stack, "Vpc", {
+  natGateways: 0,
+});
+
+const cluster = new rds.DatabaseCluster(stack, "DatabaseCluster", {
+  vpc,
+  engine: rds.DatabaseClusterEngine.auroraMysql({
+    version: rds.AuroraMysqlEngineVersion.VER_3_07_0,
+  }),
+  writer: rds.ClusterInstance.provisioned("Writer"),
+  readers: [
+    rds.ClusterInstance.provisioned("Reader1"),
+    rds.ClusterInstance.provisioned("Reader2"),
+    rds.ClusterInstance.provisioned("Analytics1", { promotionTier: 15 }),
+    rds.ClusterInstance.provisioned("Analytics2", { promotionTier: 15 }),
+  ],
+  vpcSubnets: {
+    subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+  },
+  // remove this property if in production
+  removalPolicy: cdk.RemovalPolicy.DESTROY,
+});
+
+const findInstance = (id: string) =>
+  cluster.node.findChild(id).node.defaultChild as rds.CfnDBInstance;
+
+// Create endpoints for normal queris
+new DatabaseClusterEndpoint(cluster, "NormalQueryEndpoint", {
+  cluster,
+  endpointType: DatabaseClusterEndpointType.READER,
+  members: DatabaseClusterEndpointMember.exclude([
+    findInstance("Writer").ref,
+    findInstance("Reader1").ref,
+    findInstance("Reader2").ref,
+  ]),
+});
+
+// Create endpoints for analytical queris
+new DatabaseClusterEndpoint(cluster, "AnalyticalQueryEndpoint", {
+  cluster,
+  endpointType: DatabaseClusterEndpointType.READER,
+  members: DatabaseClusterEndpointMember.include([
+    findInstance("Analytics1").ref,
+    findInstance("Analytics2").ref,
+  ]),
+});
+```
+
+### Use Legacy DatabaseClusrer
+
+This is an example using the legacy `rds.DatabaseClusrer` definition method.
+
 ```ts
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
@@ -106,7 +170,7 @@ const vpc = new ec2.Vpc(stack, 'Vpc', {
 });
 const cluster = new rds.DatabaseCluster(vpc, 'DatabaseCluster', {
   engine: rds.DatabaseClusterEngine.auroraMysql({
-    version: rds.AuroraMysqlEngineVersion.VER_3_02_1,
+    version: rds.AuroraMysqlEngineVersion.VER_3_07_0,
   }),
   instanceProps: {
     vpc,
