@@ -28,26 +28,6 @@ const project = new awscdk.AwsCdkConstructLibrary({
     '@types/aws-lambda',
   ] /* Build dependencies for this module. */,
   gitignore: ['src/lib/**/*.js'],
-  githubOptions: {
-    pullRequestLintOptions: {
-      semanticTitleOptions: {
-        types: [
-          'feat',
-          'fix',
-          'chore',
-          'ci',
-          'docs',
-          'style',
-          'refactor',
-          'test',
-          'revert',
-          'Revert',
-        ],
-      },
-      contributorStatement:
-        '_By submitting this pull request, I confirm that my contribution is made under the terms of the Apache-2.0 license_',
-    },
-  },
   // packageName: undefined,  /* The "name" in package.json. */
 });
 
