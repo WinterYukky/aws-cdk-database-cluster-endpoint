@@ -9,6 +9,12 @@ const project = new awscdk.AwsCdkConstructLibrary({
   repositoryUrl:
     'https://github.com/WinterYukky/aws-cdk-database-cluster-endpoint.git',
   keywords: ['rds', 'aurora', 'custom-endpoint'],
+
+  // Multi-language publishing configuration
+  publishToNuget: {
+    dotNetNamespace: 'WinterYukky.AwsCdk.DatabaseClusterEndpoint',
+    packageId: 'WinterYukky.AwsCdk.DatabaseClusterEndpoint',
+  },
   eslintOptions: {
     dirs: ['src'],
     prettier: true,
