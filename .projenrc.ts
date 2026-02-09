@@ -4,6 +4,7 @@ const project = new awscdk.AwsCdkConstructLibrary({
   authorAddress: '49480575+WinterYukky@users.noreply.github.com',
   cdkVersion: '2.165.0',
   defaultReleaseBranch: 'main',
+  jsiiVersion: '~5.9.0',
   name: 'aws-cdk-database-cluster-endpoint',
   projenrcTs: true,
   repositoryUrl:
