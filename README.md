@@ -96,7 +96,7 @@ An example of creating each read-only custom endpoint follows.
 
 ### Use Current DatabaseCluster
 
-This is an example using the current `rds.DatabaseClusrer` definition method. Recommend this pattern.
+This is an example using the current `rds.DatabaseCluster` definition method. Recommend this pattern.
 
 ```ts
 import * as cdk from 'aws-cdk-lib';
@@ -154,9 +154,9 @@ new DatabaseClusterEndpoint(cluster, 'AnalyticalQueryEndpoint', {
 });
 ```
 
-### Use Legacy DatabaseClusrer
+### Use Legacy DatabaseCluster
 
-This is an example using the legacy `rds.DatabaseClusrer` definition method.
+This is an example using the legacy `rds.DatabaseCluster` definition method.
 
 ```ts
 import * as cdk from 'aws-cdk-lib';
