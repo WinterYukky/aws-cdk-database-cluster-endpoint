@@ -167,7 +167,7 @@ export class DatabaseClusterEndpoint extends Resource {
         : undefined;
     if (!onEventHandler) {
       onEventHandler = new SingletonFunction(this, 'ResourceManageFunction', {
-        runtime: Runtime.NODEJS_18_X,
+        runtime: Runtime.NODEJS_LATEST,
         code: Code.fromAsset(join(__dirname, 'wait-for-action-finish')),
         handler: 'index.onEvent',
         architecture: Architecture.ARM_64,
@@ -207,7 +207,7 @@ export class DatabaseClusterEndpoint extends Resource {
     );
     if (!isCompleteHandler) {
       isCompleteHandler = new SingletonFunction(this, 'ResourceWaitFunction', {
-        runtime: Runtime.NODEJS_18_X,
+        runtime: Runtime.NODEJS_LATEST,
         code: Code.fromAsset(join(__dirname, 'wait-for-action-finish')),
         handler: 'index.isComplete',
         architecture: Architecture.ARM_64,

@@ -2,7 +2,7 @@ import { awscdk } from 'projen';
 const project = new awscdk.AwsCdkConstructLibrary({
   author: 'WinterYukky',
   authorAddress: '49480575+WinterYukky@users.noreply.github.com',
-  cdkVersion: '2.65.0',
+  cdkVersion: '2.165.0',
   defaultReleaseBranch: 'main',
   name: 'aws-cdk-database-cluster-endpoint',
   projenrcTs: true,
