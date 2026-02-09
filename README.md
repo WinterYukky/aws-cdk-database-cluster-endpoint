@@ -5,6 +5,7 @@ A construct library for creating custom endpoints for Amazon Aurora with the AWS
 ## Install
 
 Install the `aws-cdk-database-cluster-endpoint` through npm:
+
 ```shell
 npm install aws-cdk-database-cluster-endpoint
 ```
@@ -105,21 +106,21 @@ import * as rds from 'aws-cdk-lib/aws-rds';
 const app = new cdk.App();
 const stack = new cdk.Stack(app, 'DatabaseClusterEndpointStack');
 
-const vpc = new ec2.Vpc(stack, "Vpc", {
+const vpc = new ec2.Vpc(stack, 'Vpc', {
   natGateways: 0,
 });
 
-const cluster = new rds.DatabaseCluster(stack, "DatabaseCluster", {
+const cluster = new rds.DatabaseCluster(stack, 'DatabaseCluster', {
   vpc,
   engine: rds.DatabaseClusterEngine.auroraMysql({
-    version: rds.AuroraMysqlEngineVersion.VER_3_07_0,
+    version: rds.AuroraMysqlEngineVersion.VER_3_10_2,
   }),
-  writer: rds.ClusterInstance.provisioned("Writer"),
+  writer: rds.ClusterInstance.provisioned('Writer'),
   readers: [
-    rds.ClusterInstance.provisioned("Reader1"),
-    rds.ClusterInstance.provisioned("Reader2"),
-    rds.ClusterInstance.provisioned("Analytics1", { promotionTier: 15 }),
-    rds.ClusterInstance.provisioned("Analytics2", { promotionTier: 15 }),
+    rds.ClusterInstance.provisioned('Reader1'),
+    rds.ClusterInstance.provisioned('Reader2'),
+    rds.ClusterInstance.provisioned('Analytics1', { promotionTier: 15 }),
+    rds.ClusterInstance.provisioned('Analytics2', { promotionTier: 15 }),
   ],
   vpcSubnets: {
     subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
@@ -132,23 +133,23 @@ const findInstance = (id: string) =>
   cluster.node.findChild(id).node.defaultChild as rds.CfnDBInstance;
 
 // Create endpoints for normal queris
-new DatabaseClusterEndpoint(cluster, "NormalQueryEndpoint", {
+new DatabaseClusterEndpoint(cluster, 'NormalQueryEndpoint', {
   cluster,
   endpointType: DatabaseClusterEndpointType.READER,
   members: DatabaseClusterEndpointMember.exclude([
-    findInstance("Writer").ref,
-    findInstance("Reader1").ref,
-    findInstance("Reader2").ref,
+    findInstance('Writer').ref,
+    findInstance('Reader1').ref,
+    findInstance('Reader2').ref,
   ]),
 });
 
 // Create endpoints for analytical queris
-new DatabaseClusterEndpoint(cluster, "AnalyticalQueryEndpoint", {
+new DatabaseClusterEndpoint(cluster, 'AnalyticalQueryEndpoint', {
   cluster,
   endpointType: DatabaseClusterEndpointType.READER,
   members: DatabaseClusterEndpointMember.include([
-    findInstance("Analytics1").ref,
-    findInstance("Analytics2").ref,
+    findInstance('Analytics1').ref,
+    findInstance('Analytics2').ref,
   ]),
 });
 ```

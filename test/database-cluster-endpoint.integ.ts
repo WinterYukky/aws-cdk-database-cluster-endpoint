@@ -15,58 +15,42 @@ const vpc = new ec2.Vpc(stack, 'Vpc', {
 });
 const cluster = new rds.DatabaseCluster(vpc, 'DatabaseCluster', {
   engine: rds.DatabaseClusterEngine.auroraMysql({
-    version: rds.AuroraMysqlEngineVersion.VER_3_02_1,
+    version: rds.AuroraMysqlEngineVersion.of('8.0.mysql_aurora.3.10.3', '8.0'),
   }),
-  instanceProps: {
-    vpc,
-    vpcSubnets: {
-      subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
-    },
+  writer: rds.ClusterInstance.provisioned('Writer'),
+  readers: [
+    rds.ClusterInstance.provisioned('Reader1'),
+    rds.ClusterInstance.provisioned('Reader2'),
+    rds.ClusterInstance.provisioned('Analytics1', { promotionTier: 15 }),
+    rds.ClusterInstance.provisioned('Analytics2', { promotionTier: 15 }),
+  ],
+  vpc,
+  vpcSubnets: {
+    subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
   },
-  instances: 5,
   // remove this property if in production
   removalPolicy: cdk.RemovalPolicy.DESTROY,
 });
 
-// DatabaseCluster creates resources with an ID of "Instance{index}",
-// so get these from the cluster. (Indexes start from 1.)
-const instances = cluster.instanceIdentifiers.map(
-  (_, index) =>
-    cluster.node.findChild(`Instance${index + 1}`) as rds.CfnDBInstance
-);
-
-// Filters only the 4th and 5th instances for analytical. (Indexes start from 0.)
-const analyticalQueryInstances = instances.filter((_, index) =>
-  [3, 4].includes(index)
-);
-const normalQueryInstances = instances.filter(
-  (_, index) => ![3, 4].includes(index)
-);
-
-/**
- * [Optional]
- * Set a low priority to prevent this Aurora Replicas from being promoted
- * to the primary instance in the event of a failure of the existing primary instance.
- */
-analyticalQueryInstances.forEach((analytical) => {
-  analytical.addPropertyOverride('PromotionTier', 15);
-  normalQueryInstances.forEach((normal) => analytical.addDependency(normal));
-});
+const findInstance = (id: string) =>
+  cluster.node.findChild(id).node.defaultChild as rds.CfnDBInstance;
 
 // Create endpoints for analytical queris
 new DatabaseClusterEndpoint(cluster, 'AnalyticalQueryEndpoint', {
   cluster,
   endpointType: DatabaseClusterEndpointType.READER,
-  members: DatabaseClusterEndpointMember.include(
-    analyticalQueryInstances.map((instance) => instance.ref)
-  ),
+  members: DatabaseClusterEndpointMember.include([
+    findInstance('Analytics1').ref,
+    findInstance('Analytics2').ref,
+  ]),
 });
 
 // Create endpoints for normal queris
 new DatabaseClusterEndpoint(cluster, 'NormalQueryEndpoint', {
   cluster,
   endpointType: DatabaseClusterEndpointType.READER,
-  members: DatabaseClusterEndpointMember.exclude(
-    analyticalQueryInstances.map((instance) => instance.ref)
-  ),
+  members: DatabaseClusterEndpointMember.exclude([
+    findInstance('Analytics1').ref,
+    findInstance('Analytics2').ref,
+  ]),
 });
