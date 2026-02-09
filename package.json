@@ -23,6 +23,7 @@
     "integ:snapshot-all": "npx projen integ:snapshot-all",
     "package": "npx projen package",
     "package-all": "npx projen package-all",
+    "package:dotnet": "npx projen package:dotnet",
     "package:js": "npx projen package:js",
     "post-compile": "npx projen post-compile",
     "post-upgrade": "npx projen post-upgrade",
@@ -133,7 +134,12 @@
   "stability": "stable",
   "jsii": {
     "outdir": "dist",
-    "targets": {},
+    "targets": {
+      "dotnet": {
+        "namespace": "WinterYukky.AwsCdk.DatabaseClusterEndpoint",
+        "packageId": "WinterYukky.AwsCdk.DatabaseClusterEndpoint"
+      }
+    },
     "tsc": {
       "outDir": "lib",
       "rootDir": "src"
