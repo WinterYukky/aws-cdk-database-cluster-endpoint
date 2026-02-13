@@ -4,11 +4,9 @@ import {
   ArnFormat,
   CustomResource,
   Duration,
-  Lazy,
-  Names,
   Resource,
   Stack,
-  PhysicalName,
+  PhysicalName
 } from 'aws-cdk-lib';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import {
@@ -148,14 +146,7 @@ export class DatabaseClusterEndpoint extends Resource {
   ) {
     super(scope, id, {
       physicalName:
-        props.endpointIdentifier ??
-        Lazy.string({
-          produce: () =>
-            Names.uniqueResourceName(this, {
-              allowedSpecialCharacters: '-',
-              maxLength: 63,
-            }).toLocaleLowerCase(),
-        }),
+        props.endpointIdentifier ?? PhysicalName.GENERATE_IF_NEEDED
     });
     const endpointType = props.endpointType ?? DatabaseClusterEndpointType.ANY;
     const excludedMembers =
@@ -174,7 +165,7 @@ export class DatabaseClusterEndpoint extends Resource {
         architecture: Architecture.ARM_64,
         timeout: Duration.minutes(15),
         uuid: '7ebee0fa-b9cc-4ef6-8ded-0294ad649bf7',
-        functionName: PhysicalName.GENERATE_IF_NEEDED,
+        functionName: 'ResourceManageFunction-7ebee0fa-b9cc-4ef6-8ded-0294ad649bf7',
       });
     }
     onEventHandler.addToRolePolicy(
@@ -215,7 +206,7 @@ export class DatabaseClusterEndpoint extends Resource {
         architecture: Architecture.ARM_64,
         timeout: Duration.minutes(15),
         uuid: 'c061108a-4752-4df0-8bbb-08c172a86d19',
-        functionName: PhysicalName.GENERATE_IF_NEEDED,
+        functionName: 'ResourceWaitFunction-c061108a-4752-4df0-8bbb-08c172a86d19',
       });
     }
     isCompleteHandler.addToRolePolicy(
@@ -250,6 +241,7 @@ export class DatabaseClusterEndpoint extends Resource {
         onEventHandler,
         isCompleteHandler,
         queryInterval: Duration.seconds(30),
+				providerFunctionName: PhysicalName.GENERATE_IF_NEEDED,
       }
     );
     this.resource = new CustomResource(this, 'Resource', {
