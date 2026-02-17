@@ -177,6 +177,7 @@ export class DatabaseClusterEndpoint extends Resource {
         architecture: Architecture.ARM_64,
         timeout: Duration.minutes(15),
         uuid: '7ebee0fa-b9cc-4ef6-8ded-0294ad649bf7',
+        functionName: PhysicalName.GENERATE_IF_NEEDED,
       }
     );
 
@@ -222,6 +223,7 @@ export class DatabaseClusterEndpoint extends Resource {
         architecture: Architecture.ARM_64,
         timeout: Duration.minutes(15),
         uuid: 'c061108a-4752-4df0-8bbb-08c172a86d19',
+        functionName: PhysicalName.GENERATE_IF_NEEDED,
       }
     );
 
