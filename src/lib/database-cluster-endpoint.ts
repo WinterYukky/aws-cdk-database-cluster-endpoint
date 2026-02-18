@@ -4,10 +4,11 @@ import {
   ArnFormat,
   CustomResource,
   Duration,
-  Lazy,
-  Names,
   Resource,
   Stack,
+  PhysicalName,
+  Names,
+  Lazy,
 } from 'aws-cdk-lib';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import {
@@ -130,8 +131,6 @@ export interface DatabaseClusterEndpointProps {
   readonly endpointType?: DatabaseClusterEndpointType;
 }
 
-let onEventHandler: SingletonFunction;
-let isCompleteHandler: SingletonFunction;
 /**
  * Creates a new custom endpoint and associates it with an Amazon Aurora DB cluster.
  *
@@ -165,16 +164,23 @@ export class DatabaseClusterEndpoint extends Resource {
       props.members?.type === DatabaseClusterEndpointMemberType.INCLUDE
         ? props.members.identifiers
         : undefined;
-    if (!onEventHandler) {
-      onEventHandler = new SingletonFunction(this, 'ResourceManageFunction', {
+
+    const stack = Stack.of(this);
+
+    const onEventHandler = new SingletonFunction(
+      this,
+      'DBClusterEndpointEventHandler',
+      {
         runtime: Runtime.NODEJS_LATEST,
         code: Code.fromAsset(join(__dirname, 'wait-for-action-finish')),
         handler: 'index.onEvent',
         architecture: Architecture.ARM_64,
         timeout: Duration.minutes(15),
         uuid: '7ebee0fa-b9cc-4ef6-8ded-0294ad649bf7',
-      });
-    }
+        functionName: PhysicalName.GENERATE_IF_NEEDED,
+      }
+    );
+
     onEventHandler.addToRolePolicy(
       new PolicyStatement({
         actions: [
@@ -191,7 +197,7 @@ export class DatabaseClusterEndpoint extends Resource {
               resourceName: props.cluster.clusterIdentifier,
               arnFormat: ArnFormat.COLON_RESOURCE_NAME,
             },
-            Stack.of(this)
+            stack
           ),
           Arn.format(
             {
@@ -200,21 +206,27 @@ export class DatabaseClusterEndpoint extends Resource {
               resourceName: this.physicalName,
               arnFormat: ArnFormat.COLON_RESOURCE_NAME,
             },
-            Stack.of(this)
+            stack
           ),
         ],
       })
     );
-    if (!isCompleteHandler) {
-      isCompleteHandler = new SingletonFunction(this, 'ResourceWaitFunction', {
+
+    // Get or create completion handler at stack level
+    const isCompleteHandler = new SingletonFunction(
+      this,
+      'DBClusterEndpointCompletionHandler',
+      {
         runtime: Runtime.NODEJS_LATEST,
         code: Code.fromAsset(join(__dirname, 'wait-for-action-finish')),
         handler: 'index.isComplete',
         architecture: Architecture.ARM_64,
         timeout: Duration.minutes(15),
         uuid: 'c061108a-4752-4df0-8bbb-08c172a86d19',
-      });
-    }
+        functionName: PhysicalName.GENERATE_IF_NEEDED,
+      }
+    );
+
     isCompleteHandler.addToRolePolicy(
       new PolicyStatement({
         actions: ['rds:DescribeDBClusterEndpoints'],
@@ -226,7 +238,7 @@ export class DatabaseClusterEndpoint extends Resource {
               resourceName: props.cluster.clusterIdentifier,
               arnFormat: ArnFormat.COLON_RESOURCE_NAME,
             },
-            Stack.of(this)
+            stack
           ),
           Arn.format(
             {
@@ -235,11 +247,12 @@ export class DatabaseClusterEndpoint extends Resource {
               resourceName: this.physicalName,
               arnFormat: ArnFormat.COLON_RESOURCE_NAME,
             },
-            Stack.of(this)
+            stack
           ),
         ],
       })
     );
+
     const resourceManageProvider = new Provider(
       this,
       'ResourceManageProvider',
@@ -247,6 +260,7 @@ export class DatabaseClusterEndpoint extends Resource {
         onEventHandler,
         isCompleteHandler,
         queryInterval: Duration.seconds(30),
+        providerFunctionName: PhysicalName.GENERATE_IF_NEEDED,
       }
     );
     this.resource = new CustomResource(this, 'Resource', {
