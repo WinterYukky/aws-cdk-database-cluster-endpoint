@@ -2,7 +2,7 @@ import { awscdk } from 'projen';
 const project = new awscdk.AwsCdkConstructLibrary({
   author: 'WinterYukky',
   authorAddress: '49480575+WinterYukky@users.noreply.github.com',
-  cdkVersion: '2.165.0',
+  cdkVersion: '2.183.0',
   defaultReleaseBranch: 'main',
   jsiiVersion: '~5.9.0',
   name: 'aws-cdk-database-cluster-endpoint',
@@ -55,6 +55,8 @@ const project = new awscdk.AwsCdkConstructLibrary({
         '_By submitting this pull request, I confirm that my contribution is made under the terms of the Apache-2.0 license_',
     },
   },
+  experimentalIntegRunner: true,
+  integrationTestAutoDiscover: false,
   // packageName: undefined,  /* The "name" in package.json. */
 });
 
@@ -64,6 +66,6 @@ const complieCustomResourceCommand =
 project.preCompileTask.exec(complieCustomResourceCommand);
 project.testTask.prependExec(complieCustomResourceCommand);
 project.tasks.all
-  .filter((task) => task.name.startsWith('integ:'))
+  .filter((task) => task.name.startsWith('integ'))
   .forEach((task) => task.prependExec(complieCustomResourceCommand));
 project.synth();

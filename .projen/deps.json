@@ -27,11 +27,6 @@
       "type": "build"
     },
     {
-      "name": "aws-cdk",
-      "version": "^2",
-      "type": "build"
-    },
-    {
       "name": "commit-and-tag-version",
       "version": "^12",
       "type": "build"
@@ -114,8 +109,18 @@
       "type": "build"
     },
     {
+      "name": "@aws-cdk/integ-runner",
+      "version": "latest",
+      "type": "devenv"
+    },
+    {
+      "name": "@aws-cdk/integ-tests-alpha",
+      "version": "latest",
+      "type": "devenv"
+    },
+    {
       "name": "aws-cdk-lib",
-      "version": "^2.165.0",
+      "version": "^2.183.0",
       "type": "peer"
     },
     {

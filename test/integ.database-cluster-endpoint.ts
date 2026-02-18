@@ -9,6 +9,7 @@ import {
 
 const app = new cdk.App();
 const stack = new cdk.Stack(app, 'DatabaseClusterEndpointStack');
+cdk.RemovalPolicies.of(stack).destroy();
 
 const vpc = new ec2.Vpc(stack, 'Vpc', {
   natGateways: 0,
@@ -28,8 +29,6 @@ const cluster = new rds.DatabaseCluster(vpc, 'DatabaseCluster', {
   vpcSubnets: {
     subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
   },
-  // remove this property if in production
-  removalPolicy: cdk.RemovalPolicy.DESTROY,
 });
 
 const findInstance = (id: string) =>

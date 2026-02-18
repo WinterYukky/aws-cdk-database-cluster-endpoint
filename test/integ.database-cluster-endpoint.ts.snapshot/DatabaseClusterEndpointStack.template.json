@@ -13,7 +13,9 @@
       "Value": "DatabaseClusterEndpointStack/Vpc"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcPublicSubnet1Subnet5C2D37C4": {
    "Type": "AWS::EC2::Subnet",
@@ -45,7 +47,9 @@
     "VpcId": {
      "Ref": "Vpc8378EB38"
     }
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcPublicSubnet1RouteTable6C95E38E": {
    "Type": "AWS::EC2::RouteTable",
@@ -59,7 +63,9 @@
     "VpcId": {
      "Ref": "Vpc8378EB38"
     }
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcPublicSubnet1RouteTableAssociation97140677": {
    "Type": "AWS::EC2::SubnetRouteTableAssociation",
@@ -70,7 +76,9 @@
     "SubnetId": {
      "Ref": "VpcPublicSubnet1Subnet5C2D37C4"
     }
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcPublicSubnet1DefaultRoute3DA9E72A": {
    "Type": "AWS::EC2::Route",
@@ -85,7 +93,9 @@
    },
    "DependsOn": [
     "VpcVPCGWBF912B6E"
-   ]
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcPublicSubnet2Subnet691E08A3": {
    "Type": "AWS::EC2::Subnet",
@@ -117,7 +127,9 @@
     "VpcId": {
      "Ref": "Vpc8378EB38"
     }
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcPublicSubnet2RouteTable94F7E489": {
    "Type": "AWS::EC2::RouteTable",
@@ -131,7 +143,9 @@
     "VpcId": {
      "Ref": "Vpc8378EB38"
     }
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcPublicSubnet2RouteTableAssociationDD5762D8": {
    "Type": "AWS::EC2::SubnetRouteTableAssociation",
@@ -142,7 +156,9 @@
     "SubnetId": {
      "Ref": "VpcPublicSubnet2Subnet691E08A3"
     }
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcPublicSubnet2DefaultRoute97F91067": {
    "Type": "AWS::EC2::Route",
@@ -157,7 +173,9 @@
    },
    "DependsOn": [
     "VpcVPCGWBF912B6E"
-   ]
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcIsolatedSubnet1SubnetE48C5737": {
    "Type": "AWS::EC2::Subnet",
@@ -189,7 +207,9 @@
     "VpcId": {
      "Ref": "Vpc8378EB38"
     }
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcIsolatedSubnet1RouteTable4771E3E5": {
    "Type": "AWS::EC2::RouteTable",
@@ -203,7 +223,9 @@
     "VpcId": {
      "Ref": "Vpc8378EB38"
     }
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcIsolatedSubnet1RouteTableAssociationD300FCBB": {
    "Type": "AWS::EC2::SubnetRouteTableAssociation",
@@ -214,7 +236,9 @@
     "SubnetId": {
      "Ref": "VpcIsolatedSubnet1SubnetE48C5737"
     }
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcIsolatedSubnet2Subnet16364B91": {
    "Type": "AWS::EC2::Subnet",
@@ -246,7 +270,9 @@
     "VpcId": {
      "Ref": "Vpc8378EB38"
     }
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcIsolatedSubnet2RouteTable1D30AF7D": {
    "Type": "AWS::EC2::RouteTable",
@@ -260,7 +286,9 @@
     "VpcId": {
      "Ref": "Vpc8378EB38"
     }
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcIsolatedSubnet2RouteTableAssociationF7B18CCA": {
    "Type": "AWS::EC2::SubnetRouteTableAssociation",
@@ -271,7 +299,9 @@
     "SubnetId": {
      "Ref": "VpcIsolatedSubnet2Subnet16364B91"
     }
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcIGWD7BA715C": {
    "Type": "AWS::EC2::InternetGateway",
@@ -282,7 +312,9 @@
       "Value": "DatabaseClusterEndpointStack/Vpc"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcVPCGWBF912B6E": {
    "Type": "AWS::EC2::VPCGatewayAttachment",
@@ -293,7 +325,31 @@
     "VpcId": {
      "Ref": "Vpc8378EB38"
     }
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "VpcRestrictDefaultSecurityGroupCustomResourceC73DA2BE": {
+   "Type": "Custom::VpcRestrictDefaultSG",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E",
+      "Arn"
+     ]
+    },
+    "DefaultSecurityGroupId": {
+     "Fn::GetAtt": [
+      "Vpc8378EB38",
+      "DefaultSecurityGroup"
+     ]
+    },
+    "Account": {
+     "Ref": "AWS::AccountId"
+    }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterSubnets1936229F": {
    "Type": "AWS::RDS::DBSubnetGroup",
@@ -313,7 +369,9 @@
       "Value": "DatabaseClusterEndpointStack/Vpc"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterSecurityGroup897E7FF1": {
    "Type": "AWS::EC2::SecurityGroup",
@@ -335,7 +393,9 @@
     "VpcId": {
      "Ref": "Vpc8378EB38"
     }
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterSecret7F489BCA": {
    "Type": "AWS::SecretsManager::Secret",
@@ -377,7 +437,9 @@
      "Ref": "VpcDatabaseClusterAA5493E5"
     },
     "TargetType": "AWS::RDS::DBCluster"
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterAA5493E5": {
    "Type": "AWS::RDS::DBCluster",
@@ -590,7 +652,9 @@
       "Value": "DatabaseClusterEndpointStack/Vpc"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonEventServiceRoleDefaultPolicy88E12E64": {
    "Type": "AWS::IAM::Policy",
@@ -608,6 +672,12 @@
          ]
         },
         {
+         "Fn::GetAtt": [
+          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
+          "Arn"
+         ]
+        },
+        {
          "Fn::Join": [
           "",
           [
@@ -619,18 +689,6 @@
            },
            ":*"
           ]
-         ]
-        }
-       ]
-      },
-      {
-       "Action": "lambda:InvokeFunction",
-       "Effect": "Allow",
-       "Resource": [
-        {
-         "Fn::GetAtt": [
-          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
-          "Arn"
          ]
         },
         {
@@ -645,6 +703,24 @@
            },
            ":*"
           ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "lambda:GetFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "SingletonLambda7ebee0fab9cc4ef68ded0294ad649bf70C64F3CB",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
+          "Arn"
          ]
         }
        ]
@@ -665,7 +741,9 @@
       "Ref": "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonEventServiceRoleBD909E6D"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonEvent7825EF8A": {
    "Type": "AWS::Lambda::Function",
@@ -674,7 +752,7 @@
      "S3Bucket": {
       "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
      },
-     "S3Key": "4dc48ffba382f93077a1e6824599bbd4ceb6f91eb3d9442eca3b85bdb1a20b1e.zip"
+     "S3Key": "bdc104ed9cab1b5b6421713c8155f0b753380595356f710400609664d3635eca.zip"
     },
     "Description": "AWS CDK resource provider framework - onEvent (DatabaseClusterEndpointStack/Vpc/DatabaseCluster/AnalyticalQueryEndpoint/ResourceManageProvider)",
     "Environment": {
@@ -723,7 +801,9 @@
    "DependsOn": [
     "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonEventServiceRoleDefaultPolicy88E12E64",
     "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonEventServiceRoleBD909E6D"
-   ]
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkisCompleteServiceRoleCCD8A86A": {
    "Type": "AWS::IAM::Role",
@@ -760,7 +840,9 @@
       "Value": "DatabaseClusterEndpointStack/Vpc"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkisCompleteServiceRoleDefaultPolicy3F427987": {
    "Type": "AWS::IAM::Policy",
@@ -778,6 +860,12 @@
          ]
         },
         {
+         "Fn::GetAtt": [
+          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
+          "Arn"
+         ]
+        },
+        {
          "Fn::Join": [
           "",
           [
@@ -789,18 +877,6 @@
            },
            ":*"
           ]
-         ]
-        }
-       ]
-      },
-      {
-       "Action": "lambda:InvokeFunction",
-       "Effect": "Allow",
-       "Resource": [
-        {
-         "Fn::GetAtt": [
-          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
-          "Arn"
          ]
         },
         {
@@ -818,6 +894,24 @@
          ]
         }
        ]
+      },
+      {
+       "Action": "lambda:GetFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "SingletonLambda7ebee0fab9cc4ef68ded0294ad649bf70C64F3CB",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
+          "Arn"
+         ]
+        }
+       ]
       }
      ],
      "Version": "2012-10-17"
@@ -828,7 +922,9 @@
       "Ref": "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkisCompleteServiceRoleCCD8A86A"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkisComplete49779E5D": {
    "Type": "AWS::Lambda::Function",
@@ -837,7 +933,7 @@
      "S3Bucket": {
       "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
      },
-     "S3Key": "4dc48ffba382f93077a1e6824599bbd4ceb6f91eb3d9442eca3b85bdb1a20b1e.zip"
+     "S3Key": "bdc104ed9cab1b5b6421713c8155f0b753380595356f710400609664d3635eca.zip"
     },
     "Description": "AWS CDK resource provider framework - isComplete (DatabaseClusterEndpointStack/Vpc/DatabaseCluster/AnalyticalQueryEndpoint/ResourceManageProvider)",
     "Environment": {
@@ -883,7 +979,9 @@
    "DependsOn": [
     "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkisCompleteServiceRoleDefaultPolicy3F427987",
     "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkisCompleteServiceRoleCCD8A86A"
-   ]
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRole6778CAC2": {
    "Type": "AWS::IAM::Role",
@@ -920,7 +1018,9 @@
       "Value": "DatabaseClusterEndpointStack/Vpc"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRoleDefaultPolicyE0DF0674": {
    "Type": "AWS::IAM::Policy",
@@ -938,6 +1038,12 @@
          ]
         },
         {
+         "Fn::GetAtt": [
+          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
+          "Arn"
+         ]
+        },
+        {
          "Fn::Join": [
           "",
           [
@@ -949,18 +1055,6 @@
            },
            ":*"
           ]
-         ]
-        }
-       ]
-      },
-      {
-       "Action": "lambda:InvokeFunction",
-       "Effect": "Allow",
-       "Resource": [
-        {
-         "Fn::GetAtt": [
-          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
-          "Arn"
          ]
         },
         {
@@ -978,6 +1072,24 @@
          ]
         }
        ]
+      },
+      {
+       "Action": "lambda:GetFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "SingletonLambda7ebee0fab9cc4ef68ded0294ad649bf70C64F3CB",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
+          "Arn"
+         ]
+        }
+       ]
       }
      ],
      "Version": "2012-10-17"
@@ -988,7 +1100,9 @@
       "Ref": "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRole6778CAC2"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeout6C1FF922": {
    "Type": "AWS::Lambda::Function",
@@ -997,7 +1111,7 @@
      "S3Bucket": {
       "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
      },
-     "S3Key": "4dc48ffba382f93077a1e6824599bbd4ceb6f91eb3d9442eca3b85bdb1a20b1e.zip"
+     "S3Key": "bdc104ed9cab1b5b6421713c8155f0b753380595356f710400609664d3635eca.zip"
     },
     "Description": "AWS CDK resource provider framework - onTimeout (DatabaseClusterEndpointStack/Vpc/DatabaseCluster/AnalyticalQueryEndpoint/ResourceManageProvider)",
     "Environment": {
@@ -1043,7 +1157,9 @@
    "DependsOn": [
     "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRoleDefaultPolicyE0DF0674",
     "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRole6778CAC2"
-   ]
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderwaiterstatemachineRoleE9920A0A": {
    "Type": "AWS::IAM::Role",
@@ -1066,7 +1182,9 @@
       "Value": "DatabaseClusterEndpointStack/Vpc"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderwaiterstatemachineRoleDefaultPolicy9D60444A": {
    "Type": "AWS::IAM::Policy",
@@ -1084,6 +1202,12 @@
          ]
         },
         {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeout6C1FF922",
+          "Arn"
+         ]
+        },
+        {
          "Fn::Join": [
           "",
           [
@@ -1095,18 +1219,6 @@
            },
            ":*"
           ]
-         ]
-        }
-       ]
-      },
-      {
-       "Action": "lambda:InvokeFunction",
-       "Effect": "Allow",
-       "Resource": [
-        {
-         "Fn::GetAtt": [
-          "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderframeworkonTimeout6C1FF922",
-          "Arn"
          ]
         },
         {
@@ -1129,14 +1241,14 @@
        "Action": [
         "logs:CreateLogDelivery",
         "logs:CreateLogStream",
-        "logs:GetLogDelivery",
-        "logs:UpdateLogDelivery",
         "logs:DeleteLogDelivery",
+        "logs:DescribeLogGroups",
+        "logs:DescribeResourcePolicies",
+        "logs:GetLogDelivery",
         "logs:ListLogDeliveries",
         "logs:PutLogEvents",
         "logs:PutResourcePolicy",
-        "logs:DescribeResourcePolicies",
-        "logs:DescribeLogGroups"
+        "logs:UpdateLogDelivery"
        ],
        "Effect": "Allow",
        "Resource": "*"
@@ -1150,7 +1262,9 @@
       "Ref": "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderwaiterstatemachineRoleE9920A0A"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderwaiterstatemachineLogGroup7DCBC68D": {
    "Type": "AWS::Logs::LogGroup",
@@ -1175,8 +1289,8 @@
      }
     ]
    },
-   "UpdateReplacePolicy": "Retain",
-   "DeletionPolicy": "Retain"
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderwaiterstatemachine78CB6F3D": {
    "Type": "AWS::StepFunctions::StateMachine",
@@ -1235,7 +1349,9 @@
    "DependsOn": [
     "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderwaiterstatemachineRoleDefaultPolicy9D60444A",
     "VpcDatabaseClusterAnalyticalQueryEndpointResourceManageProviderwaiterstatemachineRoleE9920A0A"
-   ]
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterAnalyticalQueryEndpoint75023E5E": {
    "Type": "Custom::DBClusterEndpoint",
@@ -1298,7 +1414,9 @@
       "Value": "DatabaseClusterEndpointStack/Vpc"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonEventServiceRoleDefaultPolicyB450FF54": {
    "Type": "AWS::IAM::Policy",
@@ -1316,6 +1434,12 @@
          ]
         },
         {
+         "Fn::GetAtt": [
+          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
+          "Arn"
+         ]
+        },
+        {
          "Fn::Join": [
           "",
           [
@@ -1327,18 +1451,6 @@
            },
            ":*"
           ]
-         ]
-        }
-       ]
-      },
-      {
-       "Action": "lambda:InvokeFunction",
-       "Effect": "Allow",
-       "Resource": [
-        {
-         "Fn::GetAtt": [
-          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
-          "Arn"
          ]
         },
         {
@@ -1353,6 +1465,24 @@
            },
            ":*"
           ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "lambda:GetFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "SingletonLambda7ebee0fab9cc4ef68ded0294ad649bf70C64F3CB",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
+          "Arn"
          ]
         }
        ]
@@ -1373,7 +1503,9 @@
       "Ref": "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonEventServiceRoleBCAB94C6"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonEvent10274689": {
    "Type": "AWS::Lambda::Function",
@@ -1382,7 +1514,7 @@
      "S3Bucket": {
       "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
      },
-     "S3Key": "4dc48ffba382f93077a1e6824599bbd4ceb6f91eb3d9442eca3b85bdb1a20b1e.zip"
+     "S3Key": "bdc104ed9cab1b5b6421713c8155f0b753380595356f710400609664d3635eca.zip"
     },
     "Description": "AWS CDK resource provider framework - onEvent (DatabaseClusterEndpointStack/Vpc/DatabaseCluster/NormalQueryEndpoint/ResourceManageProvider)",
     "Environment": {
@@ -1431,7 +1563,9 @@
    "DependsOn": [
     "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonEventServiceRoleDefaultPolicyB450FF54",
     "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonEventServiceRoleBCAB94C6"
-   ]
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkisCompleteServiceRole6FBC3C9B": {
    "Type": "AWS::IAM::Role",
@@ -1468,7 +1602,9 @@
       "Value": "DatabaseClusterEndpointStack/Vpc"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkisCompleteServiceRoleDefaultPolicyDE435754": {
    "Type": "AWS::IAM::Policy",
@@ -1486,6 +1622,12 @@
          ]
         },
         {
+         "Fn::GetAtt": [
+          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
+          "Arn"
+         ]
+        },
+        {
          "Fn::Join": [
           "",
           [
@@ -1497,18 +1639,6 @@
            },
            ":*"
           ]
-         ]
-        }
-       ]
-      },
-      {
-       "Action": "lambda:InvokeFunction",
-       "Effect": "Allow",
-       "Resource": [
-        {
-         "Fn::GetAtt": [
-          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
-          "Arn"
          ]
         },
         {
@@ -1526,6 +1656,24 @@
          ]
         }
        ]
+      },
+      {
+       "Action": "lambda:GetFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "SingletonLambda7ebee0fab9cc4ef68ded0294ad649bf70C64F3CB",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
+          "Arn"
+         ]
+        }
+       ]
       }
      ],
      "Version": "2012-10-17"
@@ -1536,7 +1684,9 @@
       "Ref": "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkisCompleteServiceRole6FBC3C9B"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkisComplete96B89467": {
    "Type": "AWS::Lambda::Function",
@@ -1545,7 +1695,7 @@
      "S3Bucket": {
       "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
      },
-     "S3Key": "4dc48ffba382f93077a1e6824599bbd4ceb6f91eb3d9442eca3b85bdb1a20b1e.zip"
+     "S3Key": "bdc104ed9cab1b5b6421713c8155f0b753380595356f710400609664d3635eca.zip"
     },
     "Description": "AWS CDK resource provider framework - isComplete (DatabaseClusterEndpointStack/Vpc/DatabaseCluster/NormalQueryEndpoint/ResourceManageProvider)",
     "Environment": {
@@ -1591,7 +1741,9 @@
    "DependsOn": [
     "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkisCompleteServiceRoleDefaultPolicyDE435754",
     "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkisCompleteServiceRole6FBC3C9B"
-   ]
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRoleAD857C3E": {
    "Type": "AWS::IAM::Role",
@@ -1628,7 +1780,9 @@
       "Value": "DatabaseClusterEndpointStack/Vpc"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRoleDefaultPolicyF589C8E8": {
    "Type": "AWS::IAM::Policy",
@@ -1646,6 +1800,12 @@
          ]
         },
         {
+         "Fn::GetAtt": [
+          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
+          "Arn"
+         ]
+        },
+        {
          "Fn::Join": [
           "",
           [
@@ -1657,18 +1817,6 @@
            },
            ":*"
           ]
-         ]
-        }
-       ]
-      },
-      {
-       "Action": "lambda:InvokeFunction",
-       "Effect": "Allow",
-       "Resource": [
-        {
-         "Fn::GetAtt": [
-          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
-          "Arn"
          ]
         },
         {
@@ -1686,6 +1834,24 @@
          ]
         }
        ]
+      },
+      {
+       "Action": "lambda:GetFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "SingletonLambda7ebee0fab9cc4ef68ded0294ad649bf70C64F3CB",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::GetAtt": [
+          "SingletonLambdac061108a47524df08bbb08c172a86d193834537F",
+          "Arn"
+         ]
+        }
+       ]
       }
      ],
      "Version": "2012-10-17"
@@ -1696,7 +1862,9 @@
       "Ref": "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRoleAD857C3E"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeout4CF819AC": {
    "Type": "AWS::Lambda::Function",
@@ -1705,7 +1873,7 @@
      "S3Bucket": {
       "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
      },
-     "S3Key": "4dc48ffba382f93077a1e6824599bbd4ceb6f91eb3d9442eca3b85bdb1a20b1e.zip"
+     "S3Key": "bdc104ed9cab1b5b6421713c8155f0b753380595356f710400609664d3635eca.zip"
     },
     "Description": "AWS CDK resource provider framework - onTimeout (DatabaseClusterEndpointStack/Vpc/DatabaseCluster/NormalQueryEndpoint/ResourceManageProvider)",
     "Environment": {
@@ -1751,7 +1919,9 @@
    "DependsOn": [
     "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRoleDefaultPolicyF589C8E8",
     "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeoutServiceRoleAD857C3E"
-   ]
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderwaiterstatemachineRole6A7B9BA7": {
    "Type": "AWS::IAM::Role",
@@ -1774,7 +1944,9 @@
       "Value": "DatabaseClusterEndpointStack/Vpc"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderwaiterstatemachineRoleDefaultPolicyB01E0919": {
    "Type": "AWS::IAM::Policy",
@@ -1792,6 +1964,12 @@
          ]
         },
         {
+         "Fn::GetAtt": [
+          "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeout4CF819AC",
+          "Arn"
+         ]
+        },
+        {
          "Fn::Join": [
           "",
           [
@@ -1803,18 +1981,6 @@
            },
            ":*"
           ]
-         ]
-        }
-       ]
-      },
-      {
-       "Action": "lambda:InvokeFunction",
-       "Effect": "Allow",
-       "Resource": [
-        {
-         "Fn::GetAtt": [
-          "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderframeworkonTimeout4CF819AC",
-          "Arn"
          ]
         },
         {
@@ -1837,14 +2003,14 @@
        "Action": [
         "logs:CreateLogDelivery",
         "logs:CreateLogStream",
-        "logs:GetLogDelivery",
-        "logs:UpdateLogDelivery",
         "logs:DeleteLogDelivery",
+        "logs:DescribeLogGroups",
+        "logs:DescribeResourcePolicies",
+        "logs:GetLogDelivery",
         "logs:ListLogDeliveries",
         "logs:PutLogEvents",
         "logs:PutResourcePolicy",
-        "logs:DescribeResourcePolicies",
-        "logs:DescribeLogGroups"
+        "logs:UpdateLogDelivery"
        ],
        "Effect": "Allow",
        "Resource": "*"
@@ -1858,7 +2024,9 @@
       "Ref": "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderwaiterstatemachineRole6A7B9BA7"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderwaiterstatemachineLogGroup8DA01734": {
    "Type": "AWS::Logs::LogGroup",
@@ -1883,8 +2051,8 @@
      }
     ]
    },
-   "UpdateReplacePolicy": "Retain",
-   "DeletionPolicy": "Retain"
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderwaiterstatemachine965F36D2": {
    "Type": "AWS::StepFunctions::StateMachine",
@@ -1943,7 +2111,9 @@
    "DependsOn": [
     "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderwaiterstatemachineRoleDefaultPolicyB01E0919",
     "VpcDatabaseClusterNormalQueryEndpointResourceManageProviderwaiterstatemachineRole6A7B9BA7"
-   ]
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "VpcDatabaseClusterNormalQueryEndpoint2F22A8B8": {
    "Type": "Custom::DBClusterEndpoint",
@@ -1968,6 +2138,112 @@
      }
     ]
    },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+     }
+    ],
+    "Policies": [
+     {
+      "PolicyName": "Inline",
+      "PolicyDocument": {
+       "Version": "2012-10-17",
+       "Statement": [
+        {
+         "Effect": "Allow",
+         "Action": [
+          "ec2:AuthorizeSecurityGroupIngress",
+          "ec2:AuthorizeSecurityGroupEgress",
+          "ec2:RevokeSecurityGroupIngress",
+          "ec2:RevokeSecurityGroupEgress"
+         ],
+         "Resource": [
+          {
+           "Fn::Join": [
+            "",
+            [
+             "arn:",
+             {
+              "Ref": "AWS::Partition"
+             },
+             ":ec2:",
+             {
+              "Ref": "AWS::Region"
+             },
+             ":",
+             {
+              "Ref": "AWS::AccountId"
+             },
+             ":security-group/",
+             {
+              "Fn::GetAtt": [
+               "Vpc8378EB38",
+               "DefaultSecurityGroup"
+              ]
+             }
+            ]
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
+  },
+  "CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+     },
+     "S3Key": "7fa1e366ee8a9ded01fc355f704cff92bfd179574e6f9cfee800a3541df1b200.zip"
+    },
+    "Timeout": 900,
+    "MemorySize": 128,
+    "Handler": "__entrypoint__.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0",
+      "Arn"
+     ]
+    },
+    "Runtime": {
+     "Fn::FindInMap": [
+      "LatestNodeRuntimeMap",
+      {
+       "Ref": "AWS::Region"
+      },
+      "value"
+     ]
+    },
+    "Description": "Lambda function for removing all inbound/outbound rules from the VPC default security group"
+   },
+   "DependsOn": [
+    "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0"
+   ],
    "UpdateReplacePolicy": "Delete",
    "DeletionPolicy": "Delete"
   },
@@ -2000,7 +2276,9 @@
       ]
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "SingletonLambda7ebee0fab9cc4ef68ded0294ad649bf7ServiceRoleDefaultPolicy208BB18C": {
    "Type": "AWS::IAM::Policy",
@@ -2032,10 +2310,7 @@
            {
             "Ref": "AWS::AccountId"
            },
-           ":cluster:",
-           {
-            "Ref": "VpcDatabaseClusterAA5493E5"
-           }
+           ":cluster-endpoint:databaseclusterendpointstaceclusternormalqueryendpoint891f7864"
           ]
          ]
         },
@@ -2058,18 +2333,7 @@
            ":cluster-endpoint:databaseclusterendpointstacsteranalyticalqueryendpoint0d2f3a26"
           ]
          ]
-        }
-       ]
-      },
-      {
-       "Action": [
-        "rds:AddTagsToResource",
-        "rds:CreateDBClusterEndpoint",
-        "rds:DeleteDBClusterEndpoint",
-        "rds:ModifyDBClusterEndpoint"
-       ],
-       "Effect": "Allow",
-       "Resource": [
+        },
         {
          "Fn::Join": [
           "",
@@ -2092,26 +2356,6 @@
            }
           ]
          ]
-        },
-        {
-         "Fn::Join": [
-          "",
-          [
-           "arn:",
-           {
-            "Ref": "AWS::Partition"
-           },
-           ":rds:",
-           {
-            "Ref": "AWS::Region"
-           },
-           ":",
-           {
-            "Ref": "AWS::AccountId"
-           },
-           ":cluster-endpoint:databaseclusterendpointstaceclusternormalqueryendpoint891f7864"
-          ]
-         ]
         }
        ]
       }
@@ -2124,7 +2368,9 @@
       "Ref": "SingletonLambda7ebee0fab9cc4ef68ded0294ad649bf7ServiceRoleF9538B09"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "SingletonLambda7ebee0fab9cc4ef68ded0294ad649bf70C64F3CB": {
    "Type": "AWS::Lambda::Function",
@@ -2151,7 +2397,9 @@
    "DependsOn": [
     "SingletonLambda7ebee0fab9cc4ef68ded0294ad649bf7ServiceRoleDefaultPolicy208BB18C",
     "SingletonLambda7ebee0fab9cc4ef68ded0294ad649bf7ServiceRoleF9538B09"
-   ]
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "SingletonLambdac061108a47524df08bbb08c172a86d19ServiceRoleF6EAEFD0": {
    "Type": "AWS::IAM::Role",
@@ -2182,7 +2430,9 @@
       ]
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "SingletonLambdac061108a47524df08bbb08c172a86d19ServiceRoleDefaultPolicy2A4A2487": {
    "Type": "AWS::IAM::Policy",
@@ -2209,10 +2459,7 @@
            {
             "Ref": "AWS::AccountId"
            },
-           ":cluster:",
-           {
-            "Ref": "VpcDatabaseClusterAA5493E5"
-           }
+           ":cluster-endpoint:databaseclusterendpointstaceclusternormalqueryendpoint891f7864"
           ]
          ]
         },
@@ -2235,13 +2482,7 @@
            ":cluster-endpoint:databaseclusterendpointstacsteranalyticalqueryendpoint0d2f3a26"
           ]
          ]
-        }
-       ]
-      },
-      {
-       "Action": "rds:DescribeDBClusterEndpoints",
-       "Effect": "Allow",
-       "Resource": [
+        },
         {
          "Fn::Join": [
           "",
@@ -2264,26 +2505,6 @@
            }
           ]
          ]
-        },
-        {
-         "Fn::Join": [
-          "",
-          [
-           "arn:",
-           {
-            "Ref": "AWS::Partition"
-           },
-           ":rds:",
-           {
-            "Ref": "AWS::Region"
-           },
-           ":",
-           {
-            "Ref": "AWS::AccountId"
-           },
-           ":cluster-endpoint:databaseclusterendpointstaceclusternormalqueryendpoint891f7864"
-          ]
-         ]
         }
        ]
       }
@@ -2296,7 +2517,9 @@
       "Ref": "SingletonLambdac061108a47524df08bbb08c172a86d19ServiceRoleF6EAEFD0"
      }
     ]
-   }
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   },
   "SingletonLambdac061108a47524df08bbb08c172a86d193834537F": {
    "Type": "AWS::Lambda::Function",
@@ -2323,7 +2546,9 @@
    "DependsOn": [
     "SingletonLambdac061108a47524df08bbb08c172a86d19ServiceRoleDefaultPolicy2A4A2487",
     "SingletonLambdac061108a47524df08bbb08c172a86d19ServiceRoleF6EAEFD0"
-   ]
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete"
   }
  },
  "Mappings": {
@@ -2374,10 +2599,10 @@
     "value": "nodejs20.x"
    },
    "cn-north-1": {
-    "value": "nodejs18.x"
+    "value": "nodejs20.x"
    },
    "cn-northwest-1": {
-    "value": "nodejs18.x"
+    "value": "nodejs20.x"
    },
    "eu-central-1": {
     "value": "nodejs20.x"
@@ -2428,10 +2653,10 @@
     "value": "nodejs20.x"
    },
    "us-gov-east-1": {
-    "value": "nodejs18.x"
+    "value": "nodejs20.x"
    },
    "us-gov-west-1": {
-    "value": "nodejs18.x"
+    "value": "nodejs20.x"
    },
    "us-iso-east-1": {
     "value": "nodejs18.x"
