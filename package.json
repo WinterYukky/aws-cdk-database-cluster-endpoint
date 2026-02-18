@@ -15,12 +15,8 @@
     "docgen": "npx projen docgen",
     "eject": "npx projen eject",
     "eslint": "npx projen eslint",
-    "integ:database-cluster-endpoint:assert": "npx projen integ:database-cluster-endpoint:assert",
-    "integ:database-cluster-endpoint:deploy": "npx projen integ:database-cluster-endpoint:deploy",
-    "integ:database-cluster-endpoint:destroy": "npx projen integ:database-cluster-endpoint:destroy",
-    "integ:database-cluster-endpoint:snapshot": "npx projen integ:database-cluster-endpoint:snapshot",
-    "integ:database-cluster-endpoint:watch": "npx projen integ:database-cluster-endpoint:watch",
-    "integ:snapshot-all": "npx projen integ:snapshot-all",
+    "integ": "npx projen integ",
+    "integ:update": "npx projen integ:update",
     "package": "npx projen package",
     "package-all": "npx projen package-all",
     "package:dotnet": "npx projen package:dotnet",
@@ -42,14 +38,15 @@
     "organization": false
   },
   "devDependencies": {
+    "@aws-cdk/integ-runner": "latest",
+    "@aws-cdk/integ-tests-alpha": "latest",
     "@aws-sdk/client-rds": "^3.637.0",
     "@types/aws-lambda": "^8.10.145",
     "@types/jest": "^27",
     "@types/node": "^16 <= 16.18.78",
     "@typescript-eslint/eslint-plugin": "^8",
     "@typescript-eslint/parser": "^8",
-    "aws-cdk": "^2",
-    "aws-cdk-lib": "2.165.0",
+    "aws-cdk-lib": "2.183.0",
     "commit-and-tag-version": "^12",
     "constructs": "10.0.5",
     "esbuild": "^0.23.1",
@@ -72,7 +69,7 @@
     "typescript": "^4.9.5"
   },
   "peerDependencies": {
-    "aws-cdk-lib": "^2.165.0",
+    "aws-cdk-lib": "^2.183.0",
     "constructs": "^10.0.5"
   },
   "keywords": [

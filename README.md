@@ -125,8 +125,6 @@ const cluster = new rds.DatabaseCluster(stack, 'DatabaseCluster', {
   vpcSubnets: {
     subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
   },
-  // remove this property if in production
-  removalPolicy: cdk.RemovalPolicy.DESTROY,
 });
 
 const findInstance = (id: string) =>
@@ -180,8 +178,6 @@ const cluster = new rds.DatabaseCluster(vpc, 'DatabaseCluster', {
     },
   },
   instances: 5,
-  // remove this property if in production
-  removalPolicy: cdk.RemovalPolicy.DESTROY,
 });
 
 // DatabaseCluster creates resources with an ID of "Instance{index}",

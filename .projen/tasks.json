@@ -154,93 +154,29 @@
         }
       ]
     },
-    "integ:database-cluster-endpoint:assert": {
-      "name": "integ:database-cluster-endpoint:assert",
-      "description": "assert the snapshot of integration test 'database-cluster-endpoint'",
+    "integ": {
+      "name": "integ",
+      "description": "Run integration snapshot tests",
       "steps": [
         {
           "exec": "yarn esbuild src/lib/wait-for-action-finish/index.ts --bundle --outdir=src/lib/wait-for-action-finish/ --platform=node --external:@aws-sdk/client-rds"
         },
         {
-          "exec": "[ -d \"test/database-cluster-endpoint.integ.snapshot\" ] || (echo \"No snapshot available for integration test 'database-cluster-endpoint'. Run 'projen integ:database-cluster-endpoint:deploy' to capture.\" && exit 1)"
-        },
-        {
-          "exec": "cdk synth --app \"ts-node -P tsconfig.dev.json test/database-cluster-endpoint.integ.ts\" --no-notices --no-version-reporting --no-asset-metadata --no-path-metadata -o test/.tmp/database-cluster-endpoint.integ/assert.cdk.out > /dev/null"
-        },
-        {
-          "exec": "diff -r -x asset.* -x cdk.out -x manifest.json -x tree.json test/database-cluster-endpoint.integ.snapshot/ test/.tmp/database-cluster-endpoint.integ/assert.cdk.out/"
+          "exec": "integ-runner $@ --language typescript",
+          "receiveArgs": true
         }
       ]
     },
-    "integ:database-cluster-endpoint:deploy": {
-      "name": "integ:database-cluster-endpoint:deploy",
-      "description": "deploy integration test 'database-cluster-endpoint' and capture snapshot",
+    "integ:update": {
+      "name": "integ:update",
+      "description": "Run and update integration snapshot tests",
       "steps": [
         {
           "exec": "yarn esbuild src/lib/wait-for-action-finish/index.ts --bundle --outdir=src/lib/wait-for-action-finish/ --platform=node --external:@aws-sdk/client-rds"
         },
         {
-          "exec": "rm -fr test/.tmp/database-cluster-endpoint.integ/deploy.cdk.out"
-        },
-        {
-          "exec": "cdk deploy --app \"ts-node -P tsconfig.dev.json test/database-cluster-endpoint.integ.ts\" --no-notices --no-version-reporting --no-asset-metadata --no-path-metadata '**' --require-approval=never -o test/.tmp/database-cluster-endpoint.integ/deploy.cdk.out"
-        },
-        {
-          "exec": "rm -fr test/database-cluster-endpoint.integ.snapshot"
-        },
-        {
-          "exec": "mv test/.tmp/database-cluster-endpoint.integ/deploy.cdk.out test/database-cluster-endpoint.integ.snapshot"
-        },
-        {
-          "spawn": "integ:database-cluster-endpoint:destroy"
-        }
-      ]
-    },
-    "integ:database-cluster-endpoint:destroy": {
-      "name": "integ:database-cluster-endpoint:destroy",
-      "description": "destroy integration test 'database-cluster-endpoint'",
-      "steps": [
-        {
-          "exec": "yarn esbuild src/lib/wait-for-action-finish/index.ts --bundle --outdir=src/lib/wait-for-action-finish/ --platform=node --external:@aws-sdk/client-rds"
-        },
-        {
-          "exec": "cdk destroy --app test/database-cluster-endpoint.integ.snapshot '**' --no-version-reporting"
-        }
-      ]
-    },
-    "integ:database-cluster-endpoint:snapshot": {
-      "name": "integ:database-cluster-endpoint:snapshot",
-      "description": "update snapshot for integration test \"database-cluster-endpoint\"",
-      "steps": [
-        {
-          "exec": "yarn esbuild src/lib/wait-for-action-finish/index.ts --bundle --outdir=src/lib/wait-for-action-finish/ --platform=node --external:@aws-sdk/client-rds"
-        },
-        {
-          "exec": "cdk synth --app \"ts-node -P tsconfig.dev.json test/database-cluster-endpoint.integ.ts\" --no-notices --no-version-reporting --no-asset-metadata --no-path-metadata -o test/database-cluster-endpoint.integ.snapshot > /dev/null"
-        }
-      ]
-    },
-    "integ:database-cluster-endpoint:watch": {
-      "name": "integ:database-cluster-endpoint:watch",
-      "description": "watch integration test 'database-cluster-endpoint' (without updating snapshots)",
-      "steps": [
-        {
-          "exec": "yarn esbuild src/lib/wait-for-action-finish/index.ts --bundle --outdir=src/lib/wait-for-action-finish/ --platform=node --external:@aws-sdk/client-rds"
-        },
-        {
-          "exec": "cdk watch --app \"ts-node -P tsconfig.dev.json test/database-cluster-endpoint.integ.ts\" --no-notices --no-version-reporting --no-asset-metadata --no-path-metadata '**' -o test/.tmp/database-cluster-endpoint.integ/deploy.cdk.out"
-        }
-      ]
-    },
-    "integ:snapshot-all": {
-      "name": "integ:snapshot-all",
-      "description": "update snapshot for all integration tests",
-      "steps": [
-        {
-          "exec": "yarn esbuild src/lib/wait-for-action-finish/index.ts --bundle --outdir=src/lib/wait-for-action-finish/ --platform=node --external:@aws-sdk/client-rds"
-        },
-        {
-          "spawn": "integ:database-cluster-endpoint:snapshot"
+          "exec": "integ-runner $@ --language typescript --update-on-failed",
+          "receiveArgs": true
         }
       ]
     },
@@ -349,7 +285,7 @@
           "spawn": "eslint"
         },
         {
-          "spawn": "integ:database-cluster-endpoint:assert"
+          "spawn": "integ"
         }
       ]
     },
@@ -393,7 +329,7 @@
           "exec": "yarn install --check-files"
         },
         {
-          "exec": "yarn upgrade @aws-sdk/client-rds @types/aws-lambda @types/jest @types/node @typescript-eslint/eslint-plugin @typescript-eslint/parser aws-cdk commit-and-tag-version esbuild eslint-config-prettier eslint-import-resolver-typescript eslint-plugin-import eslint-plugin-prettier eslint jest jest-junit jsii-diff jsii-docgen jsii-pacmak jsii-rosetta jsii prettier projen ts-jest ts-node typescript aws-cdk-lib constructs"
+          "exec": "yarn upgrade @aws-sdk/client-rds @types/aws-lambda @types/jest @types/node @typescript-eslint/eslint-plugin @typescript-eslint/parser commit-and-tag-version esbuild eslint-config-prettier eslint-import-resolver-typescript eslint-plugin-import eslint-plugin-prettier eslint jest jest-junit jsii-diff jsii-docgen jsii-pacmak jsii-rosetta jsii prettier projen ts-jest ts-node typescript @aws-cdk/integ-runner @aws-cdk/integ-tests-alpha aws-cdk-lib constructs"
         },
         {
           "exec": "npx projen"

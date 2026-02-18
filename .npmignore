@@ -24,8 +24,6 @@ dist
 tsconfig.tsbuildinfo
 /.eslintrc.json
 !.jsii
-test/.tmp
-test/database-cluster-endpoint.integ.snapshot
 /.gitattributes
 /.projenrc.ts
 /projenrc

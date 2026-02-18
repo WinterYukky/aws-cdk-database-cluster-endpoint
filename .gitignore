@@ -52,13 +52,4 @@ junit.xml
 .jsii
 tsconfig.json
 !/API.md
-test/.tmp
-test/database-cluster-endpoint.integ.snapshot/asset.*
-test/database-cluster-endpoint.integ.snapshot/**/asset.*
-test/database-cluster-endpoint.integ.snapshot/cdk.out
-test/database-cluster-endpoint.integ.snapshot/**/cdk.out
-test/database-cluster-endpoint.integ.snapshot/manifest.json
-test/database-cluster-endpoint.integ.snapshot/**/manifest.json
-test/database-cluster-endpoint.integ.snapshot/tree.json
-test/database-cluster-endpoint.integ.snapshot/**/tree.json
 !/.projenrc.ts
