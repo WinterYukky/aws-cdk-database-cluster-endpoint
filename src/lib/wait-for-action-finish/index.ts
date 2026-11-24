@@ -79,6 +79,8 @@ const describeEndpoint = async (
 /**
  * Whether CloudFormation is rolling back the stack update that sent this event.
  * Custom resource events do not carry a rollback flag, so the stack status is used.
+ * Only UPDATE_ROLLBACK_IN_PROGRESS is covered on purpose: identifier changes
+ * cannot happen during IMPORT_ROLLBACK_IN_PROGRESS or a create rollback.
  */
 const isRollback = async (stackId: string) => {
   const result = await cloudformation.send(
@@ -242,7 +244,12 @@ export const onEvent: CdkCustomResourceHandler = async (event) => {
         if (onDesiredCluster && (await isRollback(event.StackId))) {
           console.log(`adopting existing endpoint ${identifier} on rollback`);
           if (matchesProperties(existing, resourceProperties)) {
-            return { PhysicalResourceId: normalize(identifier) };
+            // Return the same attributes as Create/Modify, so that GetAtt
+            // references can be resolved again during the rollback.
+            return {
+              PhysicalResourceId: normalize(identifier),
+              Data: existing,
+            };
           }
           return {
             PhysicalResourceId: normalize(identifier),

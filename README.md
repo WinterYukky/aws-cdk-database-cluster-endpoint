@@ -70,7 +70,7 @@ const customEndpoint = new DatabaseClusterEndpoint(cluster, 'CustomEndpoint', {
 
 ## Updating endpoints
 
-- `endpointType` and `members` are updated in place, without interrupting connections.
+- `endpointType` and `members` are updated in place.
 - Changing `endpointIdentifier` replaces the endpoint: the new endpoint is created first, and the old one is deleted at the end of the deployment. The hostname changes.
 - Changing only `cluster` fails, because custom endpoint names are unique per account and Region. Set a new `endpointIdentifier` explicitly (also when the identifier was generated automatically) to move the endpoint to another cluster.
 - Changing `members` from `include()`/`exclude()` to `all()` in place fails, because RDS does not clear existing members. Change `endpointIdentifier` at the same time to replace the endpoint.

@@ -46,6 +46,27 @@ describe('DatabaseClusterEndpoint', () => {
     );
   });
 
+  test.each([
+    ['My-Endpoint', 'my-endpoint'],
+    ['my-endpoint', 'my-endpoint'],
+  ])(
+    'stores endpointIdentifier %s as %s in the property and the IAM ARN',
+    (endpointIdentifier, expected) => {
+      const { stack, cluster } = setup();
+      new DatabaseClusterEndpoint(stack, 'Endpoint', {
+        cluster,
+        endpointIdentifier,
+      });
+      const template = Template.fromStack(stack);
+      template.hasResourceProperties('Custom::DBClusterEndpoint', {
+        DBClusterEndpointIdentifier: expected,
+      });
+      const json = JSON.stringify(template.toJSON());
+      expect(json).toContain(`:cluster-endpoint:${expected}"`);
+      expect(json).not.toContain('My-Endpoint');
+    }
+  );
+
   test('all() sets neither static nor excluded members', () => {
     const { stack, cluster } = setup();
     new DatabaseClusterEndpoint(stack, 'Endpoint', {

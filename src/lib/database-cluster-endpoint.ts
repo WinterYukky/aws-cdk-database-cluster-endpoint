@@ -9,6 +9,7 @@ import {
   PhysicalName,
   Names,
   Lazy,
+  Token,
 } from 'aws-cdk-lib';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import {
@@ -150,8 +151,13 @@ export class DatabaseClusterEndpoint extends Resource {
     props: DatabaseClusterEndpointProps
   ) {
     super(scope, id, {
+      // RDS stores identifiers in lowercase; use the stored form so that the
+      // IAM resource ARNs match the endpoint.
       physicalName:
-        props.endpointIdentifier ??
+        (props.endpointIdentifier !== undefined &&
+        !Token.isUnresolved(props.endpointIdentifier)
+          ? props.endpointIdentifier.toLowerCase()
+          : props.endpointIdentifier) ??
         Lazy.string({
           produce: () =>
             Names.uniqueResourceName(this, {

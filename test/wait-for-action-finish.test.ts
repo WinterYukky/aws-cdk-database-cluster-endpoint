@@ -67,6 +67,13 @@ const invalidState = () =>
     $metadata: {},
   });
 
+const hostname = (id: string) =>
+  `${id.toLowerCase()}.cluster-custom-abc.ap-northeast-1.rds.amazonaws.com`;
+const endpointOutput = (input: { DBClusterEndpointIdentifier: string }) => ({
+  DBClusterEndpointIdentifier: input.DBClusterEndpointIdentifier.toLowerCase(),
+  Endpoint: hostname(input.DBClusterEndpointIdentifier),
+});
+
 /** Existing endpoints, keyed by identifier, as seen by DescribeDBClusterEndpoints. */
 const givenEndpoints = (
   endpoints: Record<
@@ -92,6 +99,7 @@ const givenEndpoints = (
           DBClusterEndpointIdentifier: id,
           DBClusterIdentifier: endpoint.cluster,
           DBClusterEndpointArn: `arn:aws:rds:ap-northeast-1:123456789012:cluster-endpoint:${id}`,
+          Endpoint: hostname(id),
           Status: endpoint.status ?? 'available',
           CustomEndpointType: endpoint.type ?? 'READER',
           StaticMembers: endpoint.staticMembers ?? [],
@@ -117,8 +125,8 @@ const calls = (command: any) => rdsMock.commandCalls(command);
 beforeEach(() => {
   rdsMock.reset();
   cfnMock.reset();
-  rdsMock.on(CreateDBClusterEndpointCommand).resolves({});
-  rdsMock.on(ModifyDBClusterEndpointCommand).resolves({});
+  rdsMock.on(CreateDBClusterEndpointCommand).callsFake(endpointOutput);
+  rdsMock.on(ModifyDBClusterEndpointCommand).callsFake(endpointOutput);
   rdsMock.on(AddTagsToResourceCommand).resolves({});
   rdsMock.on(DeleteDBClusterEndpointCommand).resolves({});
   givenStackStatus('UPDATE_IN_PROGRESS');
@@ -365,6 +373,100 @@ describe('onEvent Update: in place', () => {
   // Pending a decision on findings 2 and 4 of the review.
   test.todo('rollback of all() -> include()/exclude() restores all()');
   test.todo('include() -> exclude() in place clears the static members');
+});
+
+describe('onEvent returns the attributes exposed by the construct', () => {
+  const both = {
+    'my-endpoint': { cluster: 'my-cluster' },
+    'new-endpoint': { cluster: 'my-cluster' },
+  };
+  test.each<
+    [
+      string,
+      Record<string, { cluster: string; type?: string }>,
+      string,
+      () => Promise<any>,
+      string
+    ]
+  >([
+    [
+      'Create',
+      {},
+      'UPDATE_IN_PROGRESS',
+      () =>
+        invokeOnEvent({ RequestType: 'Create', ResourceProperties: baseProps }),
+      'my-endpoint',
+    ],
+    [
+      'replacement',
+      { 'my-endpoint': { cluster: 'my-cluster' } },
+      'UPDATE_IN_PROGRESS',
+      () => update(propsB, baseProps),
+      'new-endpoint',
+    ],
+    [
+      'replacement to another cluster',
+      { 'my-endpoint': { cluster: 'my-cluster' } },
+      'UPDATE_IN_PROGRESS',
+      () =>
+        update({ ...propsB, DBClusterIdentifier: 'new-cluster' }, baseProps),
+      'new-endpoint',
+    ],
+    [
+      'in-place update',
+      { 'my-endpoint': { cluster: 'my-cluster' } },
+      'UPDATE_IN_PROGRESS',
+      () => update({ ...baseProps, EndpointType: 'ANY' }, baseProps),
+      'my-endpoint',
+    ],
+    [
+      'case-only identifier change',
+      { 'my-endpoint': { cluster: 'my-cluster' } },
+      'UPDATE_IN_PROGRESS',
+      () =>
+        update(
+          { ...baseProps, DBClusterEndpointIdentifier: 'My-Endpoint' },
+          baseProps
+        ),
+      'my-endpoint',
+    ],
+    [
+      'rollback adoption without write',
+      both,
+      'UPDATE_ROLLBACK_IN_PROGRESS',
+      () => update(baseProps, propsB, 'new-endpoint'),
+      'my-endpoint',
+    ],
+    [
+      'rollback adoption with modify',
+      { ...both, 'my-endpoint': { cluster: 'my-cluster', type: 'ANY' } },
+      'UPDATE_ROLLBACK_IN_PROGRESS',
+      () => update(baseProps, propsB, 'new-endpoint'),
+      'my-endpoint',
+    ],
+    [
+      'rollback of a failed replacement',
+      { 'my-endpoint': { cluster: 'my-cluster' } },
+      'UPDATE_ROLLBACK_IN_PROGRESS',
+      () => update(baseProps, propsB, 'my-endpoint'),
+      'my-endpoint',
+    ],
+    [
+      'rollback of a cluster-only change',
+      { 'my-endpoint': { cluster: 'my-cluster' } },
+      'UPDATE_ROLLBACK_IN_PROGRESS',
+      () =>
+        update(baseProps, { ...baseProps, DBClusterIdentifier: 'new-cluster' }),
+      'my-endpoint',
+    ],
+  ])('%s', async (_, endpoints, status, run, expectedId) => {
+    givenEndpoints(endpoints);
+    givenStackStatus(status);
+    const result = await run();
+    expect(result.PhysicalResourceId).toBe(expectedId);
+    expect(result.Data.Endpoint).toBe(hostname(expectedId));
+    expect(result.Data.DBClusterEndpointIdentifier).toBe(expectedId);
+  });
 });
 
 describe('onEvent Delete', () => {
