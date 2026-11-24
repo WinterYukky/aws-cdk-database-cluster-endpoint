@@ -34,6 +34,7 @@ const project = new awscdk.AwsCdkConstructLibrary({
     'esbuild',
     '@aws-sdk/client-rds',
     '@types/aws-lambda',
+    'aws-sdk-client-mock',
   ] /* Build dependencies for this module. */,
   gitignore: ['src/lib/**/*.js'],
   githubOptions: {

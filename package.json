@@ -48,6 +48,7 @@
     "@typescript-eslint/eslint-plugin": "^8",
     "@typescript-eslint/parser": "^8",
     "aws-cdk-lib": "2.183.0",
+    "aws-sdk-client-mock": "^4.1.0",
     "commit-and-tag-version": "^13",
     "constructs": "10.5.1",
     "esbuild": "^0.28.2",

@@ -212,6 +212,25 @@ export class DatabaseClusterEndpoint extends Resource {
       })
     );
 
+    // Endpoints replaced by an identifier change are deleted during stack cleanup,
+    // when this policy no longer lists their (old) identifiers.
+    onEventHandler.addToRolePolicy(
+      new PolicyStatement({
+        actions: ['rds:DeleteDBClusterEndpoint'],
+        resources: [
+          Arn.format(
+            {
+              service: 'rds',
+              resource: 'cluster-endpoint',
+              resourceName: '*',
+              arnFormat: ArnFormat.COLON_RESOURCE_NAME,
+            },
+            stack
+          ),
+        ],
+      })
+    );
+
     // Get or create completion handler at stack level
     const isCompleteHandler = new SingletonFunction(
       this,
@@ -230,12 +249,14 @@ export class DatabaseClusterEndpoint extends Resource {
     isCompleteHandler.addToRolePolicy(
       new PolicyStatement({
         actions: ['rds:DescribeDBClusterEndpoints'],
+        // Also covers endpoints and clusters that were removed from this
+        // construct but still have to be waited for during deletion.
         resources: [
           Arn.format(
             {
               service: 'rds',
               resource: 'cluster',
-              resourceName: props.cluster.clusterIdentifier,
+              resourceName: '*',
               arnFormat: ArnFormat.COLON_RESOURCE_NAME,
             },
             stack
@@ -244,7 +265,7 @@ export class DatabaseClusterEndpoint extends Resource {
             {
               service: 'rds',
               resource: 'cluster-endpoint',
-              resourceName: this.physicalName,
+              resourceName: '*',
               arnFormat: ArnFormat.COLON_RESOURCE_NAME,
             },
             stack
