@@ -145,22 +145,42 @@ describe('onEvent Update', () => {
   });
 
   test.each([
-    ['StaticMembers', { StaticMembers: ['a'] }],
-    ['ExcludedMembers', { ExcludedMembers: ['a'] }],
-  ])('clears %s when switching to all()', async (key, oldMembers) => {
-    rdsMock.on(ModifyDBClusterEndpointCommand).resolves({});
-    await invokeOnEvent({
+    ['include()', { StaticMembers: ['a'] }],
+    ['exclude()', { ExcludedMembers: ['a'] }],
+  ])(
+    'fails without calling RDS when switching from %s to all()',
+    async (_, oldMembers) => {
+      await expect(
+        invokeOnEvent({
+          RequestType: 'Update',
+          PhysicalResourceId: 'my-endpoint',
+          OldResourceProperties: { ...baseProps, ...oldMembers },
+          ResourceProperties: baseProps,
+        })
+      ).rejects.toThrow(/Change endpointIdentifier/);
+      expect(rdsMock.calls()).toHaveLength(0);
+    }
+  );
+
+  test('switching to all() together with a new identifier replaces the endpoint', async () => {
+    rdsMock.on(CreateDBClusterEndpointCommand).resolves({});
+    const result = await invokeOnEvent({
       RequestType: 'Update',
       PhysicalResourceId: 'my-endpoint',
-      OldResourceProperties: { ...baseProps, ...oldMembers },
-      ResourceProperties: baseProps,
+      OldResourceProperties: { ...baseProps, StaticMembers: ['a'] },
+      ResourceProperties: {
+        ...baseProps,
+        DBClusterEndpointIdentifier: 'new-endpoint',
+      },
     });
-    const input = rdsMock.commandCalls(ModifyDBClusterEndpointCommand)[0]
-      .args[0].input as unknown as Record<string, unknown>;
-    expect(input[key]).toEqual([]);
+    expect(result.PhysicalResourceId).toBe('new-endpoint');
+    const input = rdsMock.commandCalls(CreateDBClusterEndpointCommand)[0]
+      .args[0].input;
+    expect(input.StaticMembers).toBeUndefined();
+    expect(input.ExcludedMembers).toBeUndefined();
   });
 
-  test('switching from include() to exclude() clears the static members', async () => {
+  test('passes member lists through when switching from include() to exclude()', async () => {
     rdsMock.on(ModifyDBClusterEndpointCommand).resolves({});
     await invokeOnEvent({
       RequestType: 'Update',
@@ -170,7 +190,7 @@ describe('onEvent Update', () => {
     });
     const input = rdsMock.commandCalls(ModifyDBClusterEndpointCommand)[0]
       .args[0].input;
-    expect(input.StaticMembers).toEqual([]);
+    expect(input.StaticMembers).toBeUndefined();
     expect(input.ExcludedMembers).toEqual(['b']);
   });
 });

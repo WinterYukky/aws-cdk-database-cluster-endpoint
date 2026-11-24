@@ -45,15 +45,8 @@ const createEndpoint = async (properties: EndpointProperties) => ({
   ),
 });
 
-/**
- * Returns the new member list, or an empty list when the member list was set
- * before but is no longer set, so that RDS clears it.
- * Omitting the parameter would leave the previous members in place.
- */
-const membersToApply = (
-  current: string[] | undefined,
-  previous: string[] | undefined
-) => current ?? (previous && previous.length > 0 ? [] : undefined);
+const hasMembers = (members: string[] | undefined) =>
+  members !== undefined && members.length > 0;
 
 export const onEvent: CdkCustomResourceHandler = async (event) => {
   console.log(event);
@@ -83,6 +76,20 @@ export const onEvent: CdkCustomResourceHandler = async (event) => {
             'so a new endpointIdentifier is required when changing the cluster.'
         );
       }
+      if (
+        (hasMembers(oldResourceProperties.StaticMembers) ||
+          hasMembers(oldResourceProperties.ExcludedMembers)) &&
+        !hasMembers(resourceProperties.StaticMembers) &&
+        !hasMembers(resourceProperties.ExcludedMembers)
+      ) {
+        // ModifyDBClusterEndpoint ignores empty member lists, so an existing
+        // static/exclusion list cannot be reset to "all instances" in place.
+        throw new Error(
+          `Cannot change the members of custom endpoint "${resourceProperties.DBClusterEndpointIdentifier}" ` +
+            'from include()/exclude() to all() in place, because RDS does not clear existing members. ' +
+            'Change endpointIdentifier at the same time to replace the endpoint.'
+        );
+      }
       return {
         PhysicalResourceId: event.PhysicalResourceId,
         Data: await rds.send(
@@ -90,14 +97,8 @@ export const onEvent: CdkCustomResourceHandler = async (event) => {
             DBClusterEndpointIdentifier:
               resourceProperties.DBClusterEndpointIdentifier,
             EndpointType: resourceProperties.EndpointType,
-            StaticMembers: membersToApply(
-              resourceProperties.StaticMembers,
-              oldResourceProperties.StaticMembers
-            ),
-            ExcludedMembers: membersToApply(
-              resourceProperties.ExcludedMembers,
-              oldResourceProperties.ExcludedMembers
-            ),
+            StaticMembers: resourceProperties.StaticMembers,
+            ExcludedMembers: resourceProperties.ExcludedMembers,
           })
         ),
       };
