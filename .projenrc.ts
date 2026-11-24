@@ -1,4 +1,5 @@
-import { awscdk } from 'projen';
+import { awscdk, github } from 'projen';
+import { JobPermission } from 'projen/lib/github/workflows-model';
 const project = new awscdk.AwsCdkConstructLibrary({
   author: 'WinterYukky',
   authorAddress: '49480575+WinterYukky@users.noreply.github.com',
@@ -36,6 +37,7 @@ const project = new awscdk.AwsCdkConstructLibrary({
   ] /* Build dependencies for this module. */,
   gitignore: ['src/lib/**/*.js'],
   githubOptions: {
+    projenCredentials: github.GithubCredentials.fromApp(),
     pullRequestLintOptions: {
       semanticTitleOptions: {
         types: [
@@ -63,10 +65,38 @@ const project = new awscdk.AwsCdkConstructLibrary({
       labels: ['auto-upgrade'],
     },
   },
+  autoApproveOptions: {
+    allowedUsernames: ['winteryukky-projen-bot[bot]'],
+    label: 'auto-upgrade',
+  },
+  autoMerge: false,
   experimentalIntegRunner: true,
   integrationTestAutoDiscover: false,
   // packageName: undefined,  /* The "name" in package.json. */
 });
+
+// Override auto-approve workflow to also enable auto-merge
+const autoApproveWorkflow = project.github?.tryFindWorkflow('auto-approve');
+const approveJob = autoApproveWorkflow?.getJob('approve');
+if (approveJob && 'steps' in approveJob) {
+  autoApproveWorkflow?.updateJob('approve', {
+    ...approveJob,
+    permissions: {
+      pullRequests: JobPermission.WRITE,
+      contents: JobPermission.WRITE,
+    },
+    steps: [
+      ...(approveJob.steps ?? []),
+      {
+        name: 'Enable auto-merge',
+        env: {
+          GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}',
+        },
+        run: 'gh pr merge --squash --auto "${{ github.event.pull_request.number }}" --repo "${{ github.repository }}"',
+      },
+    ],
+  });
+}
 
 // complie the custom resource Lambda functions
 const complieCustomResourceCommand =
