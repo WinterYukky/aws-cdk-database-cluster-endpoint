@@ -1069,9 +1069,9 @@
                     "id": "AnalyticalQueryEndpoint",
                     "path": "DatabaseClusterEndpointStack/Vpc/DatabaseCluster/AnalyticalQueryEndpoint",
                     "children": {
-                      "ResourceManageFunction": {
-                        "id": "ResourceManageFunction",
-                        "path": "DatabaseClusterEndpointStack/Vpc/DatabaseCluster/AnalyticalQueryEndpoint/ResourceManageFunction",
+                      "DBClusterEndpointEventHandler": {
+                        "id": "DBClusterEndpointEventHandler",
+                        "path": "DatabaseClusterEndpointStack/Vpc/DatabaseCluster/AnalyticalQueryEndpoint/DBClusterEndpointEventHandler",
                         "constructInfo": {
                           "fqn": "aws-cdk-lib.aws_lambda.SingletonFunction",
                           "version": "2.183.0",
@@ -1082,14 +1082,15 @@
                               "handler": "*",
                               "architecture": "*",
                               "timeout": "*",
-                              "uuid": "*"
+                              "uuid": "*",
+                              "functionName": "*"
                             }
                           ]
                         }
                       },
-                      "ResourceWaitFunction": {
-                        "id": "ResourceWaitFunction",
-                        "path": "DatabaseClusterEndpointStack/Vpc/DatabaseCluster/AnalyticalQueryEndpoint/ResourceWaitFunction",
+                      "DBClusterEndpointCompletionHandler": {
+                        "id": "DBClusterEndpointCompletionHandler",
+                        "path": "DatabaseClusterEndpointStack/Vpc/DatabaseCluster/AnalyticalQueryEndpoint/DBClusterEndpointCompletionHandler",
                         "constructInfo": {
                           "fqn": "aws-cdk-lib.aws_lambda.SingletonFunction",
                           "version": "2.183.0",
@@ -1100,7 +1101,8 @@
                               "handler": "*",
                               "architecture": "*",
                               "timeout": "*",
-                              "uuid": "*"
+                              "uuid": "*",
+                              "functionName": "*"
                             }
                           ]
                         }
@@ -2594,6 +2596,44 @@
                     "id": "NormalQueryEndpoint",
                     "path": "DatabaseClusterEndpointStack/Vpc/DatabaseCluster/NormalQueryEndpoint",
                     "children": {
+                      "DBClusterEndpointEventHandler": {
+                        "id": "DBClusterEndpointEventHandler",
+                        "path": "DatabaseClusterEndpointStack/Vpc/DatabaseCluster/NormalQueryEndpoint/DBClusterEndpointEventHandler",
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_lambda.SingletonFunction",
+                          "version": "2.183.0",
+                          "metadata": [
+                            {
+                              "runtime": "*",
+                              "code": "*",
+                              "handler": "*",
+                              "architecture": "*",
+                              "timeout": "*",
+                              "uuid": "*",
+                              "functionName": "*"
+                            }
+                          ]
+                        }
+                      },
+                      "DBClusterEndpointCompletionHandler": {
+                        "id": "DBClusterEndpointCompletionHandler",
+                        "path": "DatabaseClusterEndpointStack/Vpc/DatabaseCluster/NormalQueryEndpoint/DBClusterEndpointCompletionHandler",
+                        "constructInfo": {
+                          "fqn": "aws-cdk-lib.aws_lambda.SingletonFunction",
+                          "version": "2.183.0",
+                          "metadata": [
+                            {
+                              "runtime": "*",
+                              "code": "*",
+                              "handler": "*",
+                              "architecture": "*",
+                              "timeout": "*",
+                              "uuid": "*",
+                              "functionName": "*"
+                            }
+                          ]
+                        }
+                      },
                       "ResourceManageProvider": {
                         "id": "ResourceManageProvider",
                         "path": "DatabaseClusterEndpointStack/Vpc/DatabaseCluster/NormalQueryEndpoint/ResourceManageProvider",
@@ -4303,6 +4343,30 @@
                                       ]
                                     }
                                   ]
+                                },
+                                {
+                                  "Action": "rds:DeleteDBClusterEndpoint",
+                                  "Effect": "Allow",
+                                  "Resource": {
+                                    "Fn::Join": [
+                                      "",
+                                      [
+                                        "arn:",
+                                        {
+                                          "Ref": "AWS::Partition"
+                                        },
+                                        ":rds:",
+                                        {
+                                          "Ref": "AWS::Region"
+                                        },
+                                        ":",
+                                        {
+                                          "Ref": "AWS::AccountId"
+                                        },
+                                        ":cluster-endpoint:*"
+                                      ]
+                                    ]
+                                  }
                                 }
                               ],
                               "Version": "2012-10-17"
@@ -4334,6 +4398,16 @@
                         {
                           "attachToRole": [
                             "*"
+                          ]
+                        },
+                        {
+                          "addStatements": [
+                            {}
+                          ]
+                        },
+                        {
+                          "addStatements": [
+                            {}
                           ]
                         },
                         {
@@ -4384,6 +4458,16 @@
                       "addToPrincipalPolicy": [
                         {}
                       ]
+                    },
+                    {
+                      "addToPrincipalPolicy": [
+                        {}
+                      ]
+                    },
+                    {
+                      "addToPrincipalPolicy": [
+                        {}
+                      ]
                     }
                   ]
                 }
@@ -4428,7 +4512,7 @@
                       "s3Bucket": {
                         "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
                       },
-                      "s3Key": "d991e1d2578039de9c3098a97339ea201ed89ba078320b362d2ad301da114b92.zip"
+                      "s3Key": "70bbc0700ff4ae226b347f7e85d48af4bf2f6fcbe64f28e74b0f3387b330a51b.zip"
                     },
                     "handler": "index.onEvent",
                     "role": {
@@ -4456,7 +4540,8 @@
                   "code": "*",
                   "handler": "*",
                   "architecture": "*",
-                  "timeout": "*"
+                  "timeout": "*",
+                  "functionName": "*"
                 }
               ]
             }
@@ -4551,7 +4636,7 @@
                                           {
                                             "Ref": "AWS::AccountId"
                                           },
-                                          ":cluster-endpoint:databaseclusterendpointstaceclusternormalqueryendpoint891f7864"
+                                          ":cluster-endpoint:*"
                                         ]
                                       ]
                                     },
@@ -4571,30 +4656,7 @@
                                           {
                                             "Ref": "AWS::AccountId"
                                           },
-                                          ":cluster-endpoint:databaseclusterendpointstacsteranalyticalqueryendpoint0d2f3a26"
-                                        ]
-                                      ]
-                                    },
-                                    {
-                                      "Fn::Join": [
-                                        "",
-                                        [
-                                          "arn:",
-                                          {
-                                            "Ref": "AWS::Partition"
-                                          },
-                                          ":rds:",
-                                          {
-                                            "Ref": "AWS::Region"
-                                          },
-                                          ":",
-                                          {
-                                            "Ref": "AWS::AccountId"
-                                          },
-                                          ":cluster:",
-                                          {
-                                            "Ref": "VpcDatabaseClusterAA5493E5"
-                                          }
+                                          ":cluster:*"
                                         ]
                                       ]
                                     }
@@ -4724,7 +4786,7 @@
                       "s3Bucket": {
                         "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
                       },
-                      "s3Key": "d991e1d2578039de9c3098a97339ea201ed89ba078320b362d2ad301da114b92.zip"
+                      "s3Key": "70bbc0700ff4ae226b347f7e85d48af4bf2f6fcbe64f28e74b0f3387b330a51b.zip"
                     },
                     "handler": "index.isComplete",
                     "role": {
@@ -4752,7 +4814,8 @@
                   "code": "*",
                   "handler": "*",
                   "architecture": "*",
-                  "timeout": "*"
+                  "timeout": "*",
+                  "functionName": "*"
                 }
               ]
             }
@@ -4784,7 +4847,7 @@
         "path": "Tree",
         "constructInfo": {
           "fqn": "constructs.Construct",
-          "version": "10.0.5"
+          "version": "10.5.1"
         }
       }
     },

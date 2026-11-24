@@ -1,5 +1,5 @@
 {
-  "version": "52.0.0",
+  "version": "55.0.0",
   "artifacts": {
     "DatabaseClusterEndpointStack.assets": {
       "type": "cdk:asset-manifest",
@@ -18,7 +18,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-${AWS::Region}",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/cd94ad3ab80e1a8f61cceb693abdb6981a8b6b3c2255f61a59c09c1dbf774155.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/619556ac40108693c183cd33b7cd1943fbed395b6fcaee99e83c35ee7747b405.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -427,7 +427,7 @@
             "data": "VpcDatabaseClusterAnalytics2B824B769"
           }
         ],
-        "/DatabaseClusterEndpointStack/Vpc/DatabaseCluster/AnalyticalQueryEndpoint/ResourceManageFunction": [
+        "/DatabaseClusterEndpointStack/Vpc/DatabaseCluster/AnalyticalQueryEndpoint/DBClusterEndpointEventHandler": [
           {
             "type": "aws:cdk:analytics:construct",
             "data": {
@@ -436,11 +436,12 @@
               "handler": "*",
               "architecture": "*",
               "timeout": "*",
-              "uuid": "*"
+              "uuid": "*",
+              "functionName": "*"
             }
           }
         ],
-        "/DatabaseClusterEndpointStack/Vpc/DatabaseCluster/AnalyticalQueryEndpoint/ResourceWaitFunction": [
+        "/DatabaseClusterEndpointStack/Vpc/DatabaseCluster/AnalyticalQueryEndpoint/DBClusterEndpointCompletionHandler": [
           {
             "type": "aws:cdk:analytics:construct",
             "data": {
@@ -449,7 +450,8 @@
               "handler": "*",
               "architecture": "*",
               "timeout": "*",
-              "uuid": "*"
+              "uuid": "*",
+              "functionName": "*"
             }
           }
         ],
@@ -1160,6 +1162,34 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "VpcDatabaseClusterAnalyticalQueryEndpoint75023E5E"
+          }
+        ],
+        "/DatabaseClusterEndpointStack/Vpc/DatabaseCluster/NormalQueryEndpoint/DBClusterEndpointEventHandler": [
+          {
+            "type": "aws:cdk:analytics:construct",
+            "data": {
+              "runtime": "*",
+              "code": "*",
+              "handler": "*",
+              "architecture": "*",
+              "timeout": "*",
+              "uuid": "*",
+              "functionName": "*"
+            }
+          }
+        ],
+        "/DatabaseClusterEndpointStack/Vpc/DatabaseCluster/NormalQueryEndpoint/DBClusterEndpointCompletionHandler": [
+          {
+            "type": "aws:cdk:analytics:construct",
+            "data": {
+              "runtime": "*",
+              "code": "*",
+              "handler": "*",
+              "architecture": "*",
+              "timeout": "*",
+              "uuid": "*",
+              "functionName": "*"
+            }
           }
         ],
         "/DatabaseClusterEndpointStack/Vpc/DatabaseCluster/NormalQueryEndpoint/ResourceManageProvider/framework-onEvent": [
@@ -1903,7 +1933,8 @@
               "code": "*",
               "handler": "*",
               "architecture": "*",
-              "timeout": "*"
+              "timeout": "*",
+              "functionName": "*"
             }
           }
         ],
@@ -1943,6 +1974,22 @@
             "data": {
               "attachInlinePolicy": [
                 "*"
+              ]
+            }
+          },
+          {
+            "type": "aws:cdk:analytics:method",
+            "data": {
+              "addToPrincipalPolicy": [
+                {}
+              ]
+            }
+          },
+          {
+            "type": "aws:cdk:analytics:method",
+            "data": {
+              "addToPrincipalPolicy": [
+                {}
               ]
             }
           },
@@ -2003,6 +2050,22 @@
                 {}
               ]
             }
+          },
+          {
+            "type": "aws:cdk:analytics:method",
+            "data": {
+              "addStatements": [
+                {}
+              ]
+            }
+          },
+          {
+            "type": "aws:cdk:analytics:method",
+            "data": {
+              "addStatements": [
+                {}
+              ]
+            }
           }
         ],
         "/DatabaseClusterEndpointStack/SingletonLambda7ebee0fab9cc4ef68ded0294ad649bf7/ServiceRole/DefaultPolicy/Resource": [
@@ -2025,7 +2088,8 @@
               "code": "*",
               "handler": "*",
               "architecture": "*",
-              "timeout": "*"
+              "timeout": "*",
+              "functionName": "*"
             }
           }
         ],
@@ -2161,5 +2225,5 @@
       }
     }
   },
-  "minimumCliVersion": "2.1106.0"
+  "minimumCliVersion": "2.1149.0"
 }
