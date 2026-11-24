@@ -4,6 +4,8 @@
 
 ### DatabaseClusterEndpoint <a name="DatabaseClusterEndpoint" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpoint"></a>
 
+- *Implements:* constructs.IConstruct, constructs.IDependable, aws-cdk-lib.IResource
+
 Creates a new custom endpoint and associates it with an Amazon Aurora DB cluster.
 
 #### Initializers <a name="Initializers" id="aws-cdk-database-cluster-endpoint.DatabaseClusterEndpoint.Initializer"></a>
