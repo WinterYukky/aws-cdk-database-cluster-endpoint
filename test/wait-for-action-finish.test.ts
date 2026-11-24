@@ -284,7 +284,7 @@ describe('onEvent Update: identifier change (replacement)', () => {
     );
     expect(result.PhysicalResourceId).toBe('my-endpoint');
     expect(calls(CreateDBClusterEndpointCommand)).toHaveLength(0);
-    expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(1);
+    expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(0);
   });
 
   test('rollback of a case-only identifier change is modified in place', async () => {
@@ -295,7 +295,7 @@ describe('onEvent Update: identifier change (replacement)', () => {
       DBClusterEndpointIdentifier: 'My-Endpoint',
     });
     expect(calls(CreateDBClusterEndpointCommand)).toHaveLength(0);
-    expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(1);
+    expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(0);
   });
 });
 
@@ -317,27 +317,67 @@ describe('onEvent Update: cluster-only change', () => {
       DBClusterIdentifier: 'new-cluster',
     });
     expect(result.PhysicalResourceId).toBe('my-endpoint');
-    expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(1);
+    expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(0);
   });
 });
 
 describe('onEvent Update: in place', () => {
-  test('keeps the physical id of a stack created by the published version and tags the endpoint', async () => {
+  // The published version stored endpointIdentifier as written and set no tags.
+  const { Tags: _legacyTags, ...legacyProps } = baseProps;
+  const legacyMixedCase = {
+    ...legacyProps,
+    DBClusterEndpointIdentifier: 'My-Endpoint',
+  };
+
+  test('upgrade update only adds the tag when nothing else changed', async () => {
     givenEndpoints({ 'my-endpoint': { cluster: 'my-cluster' } });
-    const { Tags: _, ...legacyProps } = baseProps;
-    const result = await update(baseProps, legacyProps, 'legacy-request-id');
+    const result = await update(
+      baseProps,
+      legacyMixedCase,
+      'legacy-request-id'
+    );
     expect(result.PhysicalResourceId).toBe('legacy-request-id');
+    expect(result.Data.Endpoint).toBe(hostname('my-endpoint'));
     expect(calls(AddTagsToResourceCommand)[0].args[0].input).toEqual({
       ResourceName:
         'arn:aws:rds:ap-northeast-1:123456789012:cluster-endpoint:my-endpoint',
       Tags: tags,
     });
+    expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(0);
+    expect(calls(CreateDBClusterEndpointCommand)).toHaveLength(0);
+  });
+
+  test('rollback of the upgrade update makes no write', async () => {
+    givenEndpoints({ 'my-endpoint': { cluster: 'my-cluster' } });
+    givenStackStatus('UPDATE_ROLLBACK_IN_PROGRESS');
+    const result = await update(
+      legacyMixedCase,
+      baseProps,
+      'legacy-request-id'
+    );
+    expect(result.PhysicalResourceId).toBe('legacy-request-id');
+    expect(result.Data.Endpoint).toBe(hostname('my-endpoint'));
+    expect(result.Data.DBClusterEndpointIdentifier).toBe('my-endpoint');
+    expect(calls(AddTagsToResourceCommand)).toHaveLength(0);
+    expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(0);
+    expect(calls(CreateDBClusterEndpointCommand)).toHaveLength(0);
+  });
+
+  test.each<[string, Record<string, unknown>]>([
+    ['endpoint type', { EndpointType: 'ANY' }],
+    ['static members', { StaticMembers: ['a'] }],
+    ['excluded members', { ExcludedMembers: ['a'] }],
+  ])('a real %s change still calls Modify', async (_, change) => {
+    givenEndpoints({ 'my-endpoint': { cluster: 'my-cluster' } });
+    const result = await update({ ...baseProps, ...change }, baseProps);
     expect(calls(ModifyDBClusterEndpointCommand)[0].args[0].input).toEqual({
       DBClusterEndpointIdentifier: 'my-endpoint',
       EndpointType: 'READER',
       StaticMembers: undefined,
       ExcludedMembers: undefined,
+      ...change,
     });
+    expect(result.Data.Endpoint).toBe(hostname('my-endpoint'));
   });
 
   test('fails when the endpoint no longer exists', async () => {

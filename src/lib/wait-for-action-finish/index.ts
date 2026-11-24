@@ -168,6 +168,11 @@ const modifyEndpoint = async (
   physicalResourceId: string
 ) => {
   await tagEndpoint(endpoint, properties);
+  if (matchesProperties(endpoint, properties)) {
+    // Nothing but tags or identifier casing changed (e.g. the first update after
+    // upgrading, or its rollback), so avoid putting the endpoint into 'modifying'.
+    return { PhysicalResourceId: physicalResourceId, Data: endpoint };
+  }
   return {
     PhysicalResourceId: physicalResourceId,
     Data: await rds.send(
