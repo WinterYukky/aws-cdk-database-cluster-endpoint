@@ -47,6 +47,20 @@
   dependencies:
     "@cdklabs/tskb" "^0.0.4"
 
+"@aws-sdk/client-cloudformation@^3.1176.0":
+  version "3.1176.0"
+  resolved "https://registry.yarnpkg.com/@aws-sdk/client-cloudformation/-/client-cloudformation-3.1176.0.tgz#e40ba512766fa5128e29d6b2bdffa6fe2692b655"
+  integrity sha512-gClvyA0s9DYKdgbKH4TI3PwWTexAGg+IGgY6dGWpJwrcziY6tAt6Amc/qKdrAIlsGqiTWtQgeKgEC95HGazTdA==
+  dependencies:
+    "@aws-sdk/core" "^3.981.1"
+    "@aws-sdk/credential-provider-node" "^3.972.98"
+    "@aws-sdk/types" "^3.975.1"
+    "@smithy/core" "^3.40.0"
+    "@smithy/fetch-http-handler" "^5.8.1"
+    "@smithy/node-http-handler" "^4.14.2"
+    "@smithy/types" "^4.20.0"
+    tslib "^2.6.2"
+
 "@aws-sdk/client-rds@^3.1176.0":
   version "3.1176.0"
   resolved "https://registry.yarnpkg.com/@aws-sdk/client-rds/-/client-rds-3.1176.0.tgz#9d13d2a2eec4d2b2d13c9ef80d7bff0cc0193b25"

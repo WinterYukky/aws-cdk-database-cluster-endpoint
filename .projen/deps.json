@@ -1,6 +1,10 @@
 {
   "dependencies": [
     {
+      "name": "@aws-sdk/client-cloudformation",
+      "type": "build"
+    },
+    {
       "name": "@aws-sdk/client-rds",
       "type": "build"
     },

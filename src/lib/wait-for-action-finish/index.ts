@@ -1,7 +1,14 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import {
+  CloudFormationClient,
+  DescribeStacksCommand,
+} from '@aws-sdk/client-cloudformation';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import {
+  AddTagsToResourceCommand,
   CreateDBClusterEndpointCommand,
   CreateDBClusterEndpointCommandInput,
+  DBClusterEndpoint,
   DeleteDBClusterEndpointCommand,
   DescribeDBClusterEndpointsCommand,
   ModifyDBClusterEndpointCommand,
@@ -24,16 +31,79 @@ type EndpointProperties = CreateDBClusterEndpointCommandInput & {
   ServiceToken?: string;
 };
 const rds = new RDSClient({});
+const cloudformation = new CloudFormationClient({});
+
+/**
+ * Polling settings used while waiting for an endpoint to leave a transitional
+ * state inside onEvent. Exported so that tests can shorten them.
+ */
+export const waitSettings = {
+  intervalMs: 10_000,
+  maxWaitMs: 12 * 60_000,
+};
 
 const NOT_FOUND_ERRORS = [
   'DBClusterEndpointNotFoundFault',
   'DBClusterNotFoundFault',
 ];
+const errorName = (error: unknown) => (error as { name?: string })?.name ?? '';
 const isNotFoundError = (error: unknown) =>
-  NOT_FOUND_ERRORS.includes((error as { name?: string })?.name ?? '');
+  NOT_FOUND_ERRORS.includes(errorName(error));
+
+/** RDS stores identifiers in lowercase. */
+const normalize = (identifier: string | undefined) =>
+  (identifier ?? '').toLowerCase();
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+const describeEndpoint = async (
+  identifier: string | undefined
+): Promise<DBClusterEndpoint | undefined> => {
+  try {
+    const result = await rds.send(
+      new DescribeDBClusterEndpointsCommand({
+        DBClusterEndpointIdentifier: identifier,
+      })
+    );
+    return result.DBClusterEndpoints?.find(
+      (e) => normalize(e.DBClusterEndpointIdentifier) === normalize(identifier)
+    );
+  } catch (error) {
+    if (isNotFoundError(error)) {
+      return undefined;
+    }
+    throw error;
+  }
+};
+
+/**
+ * Whether CloudFormation is rolling back the stack update that sent this event.
+ * Custom resource events do not carry a rollback flag, so the stack status is used.
+ */
+const isRollback = async (stackId: string) => {
+  const result = await cloudformation.send(
+    new DescribeStacksCommand({ StackName: stackId })
+  );
+  return result.Stacks?.[0]?.StackStatus === 'UPDATE_ROLLBACK_IN_PROGRESS';
+};
+
+const tagEndpoint = async (
+  endpoint: DBClusterEndpoint,
+  properties: EndpointProperties
+) => {
+  if (!properties.Tags?.length || !endpoint.DBClusterEndpointArn) {
+    return;
+  }
+  await rds.send(
+    new AddTagsToResourceCommand({
+      ResourceName: endpoint.DBClusterEndpointArn,
+      Tags: properties.Tags,
+    })
+  );
+};
 
 const createEndpoint = async (properties: EndpointProperties) => ({
-  PhysicalResourceId: properties.DBClusterEndpointIdentifier,
+  PhysicalResourceId: normalize(properties.DBClusterEndpointIdentifier),
   Data: await rds.send(
     new CreateDBClusterEndpointCommand({
       DBClusterIdentifier: properties.DBClusterIdentifier,
@@ -41,12 +111,106 @@ const createEndpoint = async (properties: EndpointProperties) => ({
       EndpointType: properties.EndpointType,
       StaticMembers: properties.StaticMembers,
       ExcludedMembers: properties.ExcludedMembers,
+      Tags: properties.Tags,
     })
   ),
 });
 
 const hasMembers = (members: string[] | undefined) =>
   members !== undefined && members.length > 0;
+
+/**
+ * Single decision point for member transitions that ModifyDBClusterEndpoint
+ * cannot express, because it ignores empty member lists
+ * (include()/exclude() -> all()). Review findings 2 and 4 are pending a
+ * decision on the mechanism; until then such transitions fail fast.
+ */
+const assertMembersCanBeModified = (
+  properties: EndpointProperties,
+  oldProperties: EndpointProperties
+) => {
+  if (
+    (hasMembers(oldProperties.StaticMembers) ||
+      hasMembers(oldProperties.ExcludedMembers)) &&
+    !hasMembers(properties.StaticMembers) &&
+    !hasMembers(properties.ExcludedMembers)
+  ) {
+    throw new Error(
+      `Cannot change the members of custom endpoint "${properties.DBClusterEndpointIdentifier}" ` +
+        'from include()/exclude() to all() in place, because RDS does not clear existing members. ' +
+        'Change endpointIdentifier at the same time to replace the endpoint.'
+    );
+  }
+};
+
+const sameMembers = (
+  actual: string[] | undefined,
+  desired: string[] | undefined
+) =>
+  [...(actual ?? [])].map(normalize).sort().join(',') ===
+  [...(desired ?? [])].map(normalize).sort().join(',');
+
+/** Whether an existing endpoint already has the desired settings. */
+const matchesProperties = (
+  endpoint: DBClusterEndpoint,
+  properties: EndpointProperties
+) =>
+  (endpoint.CustomEndpointType ?? '').toUpperCase() ===
+    (properties.EndpointType ?? '').toUpperCase() &&
+  sameMembers(endpoint.StaticMembers, properties.StaticMembers) &&
+  sameMembers(endpoint.ExcludedMembers, properties.ExcludedMembers);
+
+const modifyEndpoint = async (
+  endpoint: DBClusterEndpoint,
+  properties: EndpointProperties,
+  physicalResourceId: string
+) => {
+  await tagEndpoint(endpoint, properties);
+  return {
+    PhysicalResourceId: physicalResourceId,
+    Data: await rds.send(
+      new ModifyDBClusterEndpointCommand({
+        DBClusterEndpointIdentifier: properties.DBClusterEndpointIdentifier,
+        EndpointType: properties.EndpointType,
+        StaticMembers: properties.StaticMembers,
+        ExcludedMembers: properties.ExcludedMembers,
+      })
+    ),
+  };
+};
+
+const deleteEndpoint = async (identifier: string | undefined) => {
+  const deadline = Date.now() + waitSettings.maxWaitMs;
+  for (;;) {
+    try {
+      return {
+        Data: await rds.send(
+          new DeleteDBClusterEndpointCommand({
+            DBClusterEndpointIdentifier: identifier,
+          })
+        ),
+      };
+    } catch (error) {
+      if (isNotFoundError(error)) {
+        console.log(`endpoint ${identifier} is already deleted`);
+        return {};
+      }
+      if (
+        errorName(error) !== 'InvalidDBClusterEndpointStateFault' ||
+        Date.now() >= deadline
+      ) {
+        throw error;
+      }
+    }
+    // The endpoint is creating, modifying or already deleting.
+    const status = (await describeEndpoint(identifier))?.Status;
+    console.log(`endpoint ${identifier} is ${status ?? 'not found'}`);
+    if (status === undefined || status === 'deleting') {
+      return {};
+    }
+    await sleep(waitSettings.intervalMs);
+  }
+};
 
 export const onEvent: CdkCustomResourceHandler = async (event) => {
   console.log(event);
@@ -57,71 +221,69 @@ export const onEvent: CdkCustomResourceHandler = async (event) => {
     case 'Update': {
       const oldResourceProperties =
         event.OldResourceProperties as EndpointProperties;
+      const identifier = resourceProperties.DBClusterEndpointIdentifier;
       const identifierChanged =
-        oldResourceProperties.DBClusterEndpointIdentifier !==
-        resourceProperties.DBClusterEndpointIdentifier;
-      const clusterChanged =
-        oldResourceProperties.DBClusterIdentifier !==
-        resourceProperties.DBClusterIdentifier;
+        normalize(oldResourceProperties.DBClusterEndpointIdentifier) !==
+        normalize(identifier);
+      const existing = await describeEndpoint(identifier);
+      const onDesiredCluster =
+        existing !== undefined &&
+        normalize(existing.DBClusterIdentifier) ===
+          normalize(resourceProperties.DBClusterIdentifier);
+
       if (identifierChanged) {
-        // Replacement: create the new endpoint and return a new physical ID,
-        // CloudFormation then deletes the old endpoint during cleanup.
-        return createEndpoint(resourceProperties);
-      }
-      if (clusterChanged) {
+        if (existing === undefined) {
+          // Replacement: create the new endpoint and return a new physical ID,
+          // CloudFormation then deletes the old endpoint during cleanup.
+          return createEndpoint(resourceProperties);
+        }
+        // During a rollback of a replacement, the previous endpoint still exists
+        // because CloudFormation deletes it only in the cleanup phase.
+        if (onDesiredCluster && (await isRollback(event.StackId))) {
+          console.log(`adopting existing endpoint ${identifier} on rollback`);
+          if (matchesProperties(existing, resourceProperties)) {
+            return { PhysicalResourceId: normalize(identifier) };
+          }
+          return {
+            PhysicalResourceId: normalize(identifier),
+            Data: await rds.send(
+              new ModifyDBClusterEndpointCommand({
+                DBClusterEndpointIdentifier: identifier,
+                EndpointType: resourceProperties.EndpointType,
+                StaticMembers: resourceProperties.StaticMembers,
+                ExcludedMembers: resourceProperties.ExcludedMembers,
+              })
+            ),
+          };
+        }
         throw new Error(
-          `Cannot move custom endpoint "${resourceProperties.DBClusterEndpointIdentifier}" ` +
-            `from cluster "${oldResourceProperties.DBClusterIdentifier}" to "${resourceProperties.DBClusterIdentifier}". ` +
-            'Custom endpoint identifiers must be unique per account and region, ' +
-            'so a new endpointIdentifier is required when changing the cluster.'
+          `Custom endpoint "${identifier}" already exists. ` +
+            'Custom endpoint identifiers must be unique per account and region, choose another endpointIdentifier.'
         );
       }
-      if (
-        (hasMembers(oldResourceProperties.StaticMembers) ||
-          hasMembers(oldResourceProperties.ExcludedMembers)) &&
-        !hasMembers(resourceProperties.StaticMembers) &&
-        !hasMembers(resourceProperties.ExcludedMembers)
-      ) {
-        // ModifyDBClusterEndpoint ignores empty member lists, so an existing
-        // static/exclusion list cannot be reset to "all instances" in place.
+
+      if (existing === undefined) {
         throw new Error(
-          `Cannot change the members of custom endpoint "${resourceProperties.DBClusterEndpointIdentifier}" ` +
-            'from include()/exclude() to all() in place, because RDS does not clear existing members. ' +
-            'Change endpointIdentifier at the same time to replace the endpoint.'
+          `Custom endpoint "${identifier}" does not exist. ` +
+            'Change endpointIdentifier to create a new endpoint.'
         );
       }
-      return {
-        PhysicalResourceId: event.PhysicalResourceId,
-        Data: await rds.send(
-          new ModifyDBClusterEndpointCommand({
-            DBClusterEndpointIdentifier:
-              resourceProperties.DBClusterEndpointIdentifier,
-            EndpointType: resourceProperties.EndpointType,
-            StaticMembers: resourceProperties.StaticMembers,
-            ExcludedMembers: resourceProperties.ExcludedMembers,
-          })
-        ),
-      };
+      if (!onDesiredCluster) {
+        throw new Error(
+          `Cannot move custom endpoint "${identifier}" ` +
+            `from cluster "${existing.DBClusterIdentifier}" to "${resourceProperties.DBClusterIdentifier}" in place. ` +
+            'Set a new endpointIdentifier explicitly (also when it was generated automatically) to replace the endpoint.'
+        );
+      }
+      assertMembersCanBeModified(resourceProperties, oldResourceProperties);
+      return modifyEndpoint(
+        existing,
+        resourceProperties,
+        event.PhysicalResourceId
+      );
     }
     case 'Delete':
-      try {
-        return {
-          Data: await rds.send(
-            new DeleteDBClusterEndpointCommand({
-              DBClusterEndpointIdentifier:
-                resourceProperties.DBClusterEndpointIdentifier,
-            })
-          ),
-        };
-      } catch (error) {
-        if (isNotFoundError(error)) {
-          console.log(
-            `endpoint ${resourceProperties.DBClusterEndpointIdentifier} is already deleted`
-          );
-          return {};
-        }
-        throw error;
-      }
+      return deleteEndpoint(resourceProperties.DBClusterEndpointIdentifier);
   }
 };
 
@@ -141,8 +303,8 @@ export const isComplete: CdkCustomResourceIsCompleteHandler = async (event) => {
     console.log(endpoint);
     state = endpoint.DBClusterEndpoints?.find(
       (e) =>
-        e.DBClusterEndpointIdentifier ===
-        resourceProperties.DBClusterEndpointIdentifier
+        normalize(e.DBClusterEndpointIdentifier) ===
+        normalize(resourceProperties.DBClusterEndpointIdentifier)
     )?.Status as EndpointActionRunStatus | undefined;
   } catch (error) {
     if (!isDelete || !isNotFoundError(error)) {

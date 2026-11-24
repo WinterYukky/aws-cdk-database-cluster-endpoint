@@ -22,6 +22,11 @@ import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 
 /**
+ * Tag set on every custom endpoint, used to scope the permissions of the handler.
+ */
+const OWNER_TAG_KEY = 'cdk-database-cluster-endpoint:stack-id';
+
+/**
  * Each custom endpoint has an associated type that determines
  * which DB instances are eligible to be associated with that endpoint.
  * Currently, the type can be READER, WRITER, or ANY.
@@ -212,11 +217,12 @@ export class DatabaseClusterEndpoint extends Resource {
       })
     );
 
-    // Endpoints replaced by an identifier change are deleted during stack cleanup,
-    // when this policy no longer lists their (old) identifiers.
+    // Endpoints that are no longer referenced by this construct (replaced by an
+    // identifier change, or restored during a rollback) are only reachable through
+    // the ownership tag that the handler sets on every endpoint of this stack.
     onEventHandler.addToRolePolicy(
       new PolicyStatement({
-        actions: ['rds:DeleteDBClusterEndpoint'],
+        actions: ['rds:DeleteDBClusterEndpoint', 'rds:ModifyDBClusterEndpoint'],
         resources: [
           Arn.format(
             {
@@ -228,6 +234,43 @@ export class DatabaseClusterEndpoint extends Resource {
             stack
           ),
         ],
+        conditions: {
+          StringEquals: {
+            [`aws:ResourceTag/${OWNER_TAG_KEY}`]: stack.stackId,
+          },
+        },
+      })
+    );
+    onEventHandler.addToRolePolicy(
+      new PolicyStatement({
+        actions: ['rds:DescribeDBClusterEndpoints'],
+        resources: [
+          Arn.format(
+            {
+              service: 'rds',
+              resource: 'cluster',
+              resourceName: '*',
+              arnFormat: ArnFormat.COLON_RESOURCE_NAME,
+            },
+            stack
+          ),
+          Arn.format(
+            {
+              service: 'rds',
+              resource: 'cluster-endpoint',
+              resourceName: '*',
+              arnFormat: ArnFormat.COLON_RESOURCE_NAME,
+            },
+            stack
+          ),
+        ],
+      })
+    );
+    // Used to detect a rollback of the stack update.
+    onEventHandler.addToRolePolicy(
+      new PolicyStatement({
+        actions: ['cloudformation:DescribeStacks'],
+        resources: [Stack.of(this).stackId],
       })
     );
 
@@ -293,6 +336,7 @@ export class DatabaseClusterEndpoint extends Resource {
         EndpointType: endpointType,
         ExcludedMembers: excludedMembers,
         StaticMembers: staticMembers,
+        Tags: [{ Key: OWNER_TAG_KEY, Value: stack.stackId }],
       },
     });
     this.cluster = props.cluster;

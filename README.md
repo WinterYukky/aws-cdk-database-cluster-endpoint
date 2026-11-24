@@ -68,6 +68,19 @@ const customEndpoint = new DatabaseClusterEndpoint(cluster, 'CustomEndpoint', {
 });
 ```
 
+## Updating endpoints
+
+- `endpointType` and `members` are updated in place, without interrupting connections.
+- Changing `endpointIdentifier` replaces the endpoint: the new endpoint is created first, and the old one is deleted at the end of the deployment. The hostname changes.
+- Changing only `cluster` fails, because custom endpoint names are unique per account and Region. Set a new `endpointIdentifier` explicitly (also when the identifier was generated automatically) to move the endpoint to another cluster.
+- Changing `members` from `include()`/`exclude()` to `all()` in place fails, because RDS does not clear existing members. Change `endpointIdentifier` at the same time to replace the endpoint.
+
+Each endpoint is tagged with `cdk-database-cluster-endpoint:stack-id` set to the ID of the owning stack. The handler can delete or modify endpoints that are no longer referenced by the construct (replaced or rolled back endpoints) only when they carry this tag. If you move the construct to another stack (stack refactoring or resource import), endpoints tagged with the old stack ID can no longer be cleaned up by the new stack.
+
+### Upgrading from an earlier version
+
+The first deployment after upgrading runs one update of every custom endpoint to add the ownership tag. Deploy the upgrade first, then change `endpointIdentifier` in a later deployment. If both happen in the same deployment, the old untagged endpoint cannot be deleted during cleanup; the deployment still succeeds, but you have to delete the old endpoint manually.
+
 ## Connecting
 
 The endpoints to access your custom endpoint will be available as the `.endpoint` attributes:

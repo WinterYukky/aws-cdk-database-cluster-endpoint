@@ -62,7 +62,23 @@ describe('DatabaseClusterEndpoint', () => {
     );
   });
 
-  test('event handler can delete endpoints that were replaced', () => {
+  test('tags the endpoint with the stack id', () => {
+    const { stack, cluster } = setup();
+    new DatabaseClusterEndpoint(stack, 'Endpoint', { cluster });
+    Template.fromStack(stack).hasResourceProperties(
+      'Custom::DBClusterEndpoint',
+      {
+        Tags: [
+          {
+            Key: 'cdk-database-cluster-endpoint:stack-id',
+            Value: { Ref: 'AWS::StackId' },
+          },
+        ],
+      }
+    );
+  });
+
+  test('event handler can manage unreferenced endpoints only when owned by the stack', () => {
     const { stack, cluster } = setup();
     new DatabaseClusterEndpoint(stack, 'Endpoint', {
       cluster,
@@ -71,8 +87,18 @@ describe('DatabaseClusterEndpoint', () => {
     Template.fromStack(stack).hasResourceProperties('AWS::IAM::Policy', {
       PolicyDocument: {
         Statement: Match.arrayWith([
-          Match.objectLike({
-            Action: 'rds:DeleteDBClusterEndpoint',
+          {
+            Action: [
+              'rds:DeleteDBClusterEndpoint',
+              'rds:ModifyDBClusterEndpoint',
+            ],
+            Condition: {
+              StringEquals: {
+                'aws:ResourceTag/cdk-database-cluster-endpoint:stack-id': {
+                  Ref: 'AWS::StackId',
+                },
+              },
+            },
             Effect: 'Allow',
             Resource: {
               'Fn::Join': [
@@ -84,10 +110,39 @@ describe('DatabaseClusterEndpoint', () => {
                 ],
               ],
             },
-          }),
+          },
+          {
+            Action: 'cloudformation:DescribeStacks',
+            Effect: 'Allow',
+            Resource: { Ref: 'AWS::StackId' },
+          },
         ]),
       },
     });
+  });
+
+  test('event handler has no unconditional access to other endpoints', () => {
+    const { stack, cluster } = setup();
+    new DatabaseClusterEndpoint(stack, 'Endpoint', {
+      cluster,
+      endpointIdentifier: 'my-endpoint',
+    });
+    const policies =
+      Template.fromStack(stack).findResources('AWS::IAM::Policy');
+    for (const policy of Object.values(policies)) {
+      for (const statement of policy.Properties.PolicyDocument.Statement) {
+        const actions = [statement.Action].flat();
+        const mutating = actions.some((a: string) =>
+          /^rds:(Create|Delete|Modify|AddTags)/.test(a)
+        );
+        const wildcard = JSON.stringify(statement.Resource).includes(
+          'cluster-endpoint:*'
+        );
+        if (mutating && wildcard) {
+          expect(statement.Condition).toBeDefined();
+        }
+      }
+    }
   });
 
   test('completion handler can describe endpoints of removed clusters', () => {
