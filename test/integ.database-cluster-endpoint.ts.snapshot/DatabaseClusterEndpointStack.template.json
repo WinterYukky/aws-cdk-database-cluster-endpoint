@@ -1374,6 +1374,14 @@
      {
       "Ref": "VpcDatabaseClusterAnalytics2B824B769"
      }
+    ],
+    "Tags": [
+     {
+      "Key": "cdk-database-cluster-endpoint:stack-id",
+      "Value": {
+       "Ref": "AWS::StackId"
+      }
+     }
     ]
    },
    "UpdateReplacePolicy": "Delete",
@@ -2136,6 +2144,14 @@
      {
       "Ref": "VpcDatabaseClusterAnalytics2B824B769"
      }
+    ],
+    "Tags": [
+     {
+      "Key": "cdk-database-cluster-endpoint:stack-id",
+      "Value": {
+       "Ref": "AWS::StackId"
+      }
+     }
     ]
    },
    "UpdateReplacePolicy": "Delete",
@@ -2360,7 +2376,17 @@
        ]
       },
       {
-       "Action": "rds:DeleteDBClusterEndpoint",
+       "Action": [
+        "rds:DeleteDBClusterEndpoint",
+        "rds:ModifyDBClusterEndpoint"
+       ],
+       "Condition": {
+        "StringEquals": {
+         "aws:ResourceTag/cdk-database-cluster-endpoint:stack-id": {
+          "Ref": "AWS::StackId"
+         }
+        }
+       },
        "Effect": "Allow",
        "Resource": {
         "Fn::Join": [
@@ -2381,6 +2407,59 @@
           ":cluster-endpoint:*"
          ]
         ]
+       }
+      },
+      {
+       "Action": "rds:DescribeDBClusterEndpoints",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":rds:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":cluster-endpoint:*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Ref": "AWS::Partition"
+           },
+           ":rds:",
+           {
+            "Ref": "AWS::Region"
+           },
+           ":",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":cluster:*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "cloudformation:DescribeStacks",
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "AWS::StackId"
        }
       }
      ],
@@ -2406,7 +2485,7 @@
      "S3Bucket": {
       "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
      },
-     "S3Key": "70bbc0700ff4ae226b347f7e85d48af4bf2f6fcbe64f28e74b0f3387b330a51b.zip"
+     "S3Key": "48375c79922719090b443241801a22c11060b3816572a0a842cedca5d6a532be.zip"
     },
     "Handler": "index.onEvent",
     "Role": {
@@ -2532,7 +2611,7 @@
      "S3Bucket": {
       "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
      },
-     "S3Key": "70bbc0700ff4ae226b347f7e85d48af4bf2f6fcbe64f28e74b0f3387b330a51b.zip"
+     "S3Key": "48375c79922719090b443241801a22c11060b3816572a0a842cedca5d6a532be.zip"
     },
     "Handler": "index.isComplete",
     "Role": {
