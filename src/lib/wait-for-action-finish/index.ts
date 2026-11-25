@@ -18,6 +18,7 @@ import {
 import {
   CdkCustomResourceHandler,
   CdkCustomResourceIsCompleteHandler,
+  Context,
 } from 'aws-lambda';
 
 type EndpointActionRunStatus =
@@ -34,12 +35,23 @@ const rds = new RDSClient({});
 const cloudformation = new CloudFormationClient({});
 
 /**
- * Polling settings used while waiting for an endpoint to leave a transitional
- * state inside onEvent. Exported so that tests can shorten them.
+ * Polling settings used while waiting for an endpoint inside onEvent.
+ * All waits of one invocation share a single deadline: the remaining Lambda
+ * time minus `reserveMs`, so that a create after a delete always has time to run.
+ * Exported so that tests can shorten them.
  */
 export const waitSettings = {
   intervalMs: 10_000,
-  maxWaitMs: 12 * 60_000,
+  maxWaitMs: 15 * 60_000,
+  reserveMs: 60_000,
+};
+
+const deadlineFor = (context: Partial<Context> | undefined) => {
+  const remaining =
+    typeof context?.getRemainingTimeInMillis === 'function'
+      ? context.getRemainingTimeInMillis() - waitSettings.reserveMs
+      : Number.POSITIVE_INFINITY;
+  return Date.now() + Math.max(0, Math.min(waitSettings.maxWaitMs, remaining));
 };
 
 const NOT_FOUND_ERRORS = [
@@ -50,7 +62,11 @@ const errorName = (error: unknown) => (error as { name?: string })?.name ?? '';
 const isNotFoundError = (error: unknown) =>
   NOT_FOUND_ERRORS.includes(errorName(error));
 
-/** RDS stores identifiers in lowercase. */
+/**
+ * RDS stores identifiers in lowercase. Used only to compare identifiers; RDS API
+ * calls receive the identifier exactly as written in the resource properties,
+ * which is also how the IAM policy of the construct refers to it.
+ */
 const normalize = (identifier: string | undefined) =>
   (identifier ?? '').toLowerCase();
 
@@ -93,12 +109,17 @@ const tagEndpoint = async (
   endpoint: DBClusterEndpoint,
   properties: EndpointProperties
 ) => {
-  if (!properties.Tags?.length || !endpoint.DBClusterEndpointArn) {
+  const arn = endpoint.DBClusterEndpointArn;
+  if (!properties.Tags?.length || !arn) {
     return;
   }
+  // Use the identifier as written in the properties, like every other call.
+  const resourceName = `${arn.slice(0, arn.lastIndexOf(':') + 1)}${
+    properties.DBClusterEndpointIdentifier
+  }`;
   await rds.send(
     new AddTagsToResourceCommand({
-      ResourceName: endpoint.DBClusterEndpointArn,
+      ResourceName: resourceName,
       Tags: properties.Tags,
     })
   );
@@ -188,8 +209,10 @@ const modifyEndpoint = async (
   };
 };
 
-const deleteEndpoint = async (identifier: string | undefined) => {
-  const deadline = Date.now() + waitSettings.maxWaitMs;
+const deleteEndpoint = async (
+  identifier: string | undefined,
+  deadline: number
+) => {
   for (;;) {
     try {
       return {
@@ -221,8 +244,10 @@ const deleteEndpoint = async (identifier: string | undefined) => {
   }
 };
 
-const waitUntilDeleted = async (identifier: string | undefined) => {
-  const deadline = Date.now() + waitSettings.maxWaitMs;
+const waitUntilDeleted = async (
+  identifier: string | undefined,
+  deadline: number
+) => {
   while ((await describeEndpoint(identifier)) !== undefined) {
     if (Date.now() >= deadline) {
       throw new Error(
@@ -241,15 +266,34 @@ const waitUntilDeleted = async (identifier: string | undefined) => {
  */
 const recreateEndpoint = async (
   properties: EndpointProperties,
-  physicalResourceId: string
+  physicalResourceId: string,
+  deadline: number
 ) => {
   const identifier = properties.DBClusterEndpointIdentifier;
   console.log(`recreating endpoint ${identifier} to restore its members`);
-  await deleteEndpoint(identifier);
-  await waitUntilDeleted(identifier);
+  await deleteEndpoint(identifier, deadline);
+  await waitUntilDeleted(identifier, deadline);
+  return restoreEndpoint(properties, physicalResourceId);
+};
+
+/**
+ * Creates a missing endpoint during a rollback, keeping the physical ID.
+ * Also covers a rollback that was interrupted between delete and create of a
+ * recreate and is resumed with ContinueUpdateRollback.
+ */
+const restoreEndpoint = async (
+  properties: EndpointProperties,
+  physicalResourceId: string
+) => {
   const created = await createEndpoint(properties);
   return { PhysicalResourceId: physicalResourceId, Data: created.Data };
 };
+
+/** Whether an existing endpoint can be changed with Modify during a rollback. */
+const needsRecreate = (
+  endpoint: DBClusterEndpoint,
+  properties: EndpointProperties
+) => endpoint.Status === 'deleting' || !canModifyMembers(endpoint, properties);
 
 /**
  * Applies type and members to an existing endpoint on the desired cluster.
@@ -260,18 +304,20 @@ const applyProperties = async (
   endpoint: DBClusterEndpoint,
   properties: EndpointProperties,
   physicalResourceId: string,
-  stackId: string
+  stackId: string,
+  deadline: number
 ) => {
+  if (needsRecreate(endpoint, properties) && (await isRollback(stackId))) {
+    return recreateEndpoint(properties, physicalResourceId, deadline);
+  }
   if (!canModifyMembers(endpoint, properties)) {
-    if (await isRollback(stackId)) {
-      return recreateEndpoint(properties, physicalResourceId);
-    }
     throw membersCannotBeModifiedError(properties);
   }
   return modifyEndpoint(endpoint, properties, physicalResourceId);
 };
 
-export const onEvent: CdkCustomResourceHandler = async (event) => {
+export const onEvent: CdkCustomResourceHandler = async (event, context) => {
+  const deadline = deadlineFor(context);
   console.log(event);
   const resourceProperties = event.ResourceProperties as EndpointProperties;
   switch (event.RequestType) {
@@ -300,6 +346,13 @@ export const onEvent: CdkCustomResourceHandler = async (event) => {
         // because CloudFormation deletes it only in the cleanup phase.
         if (onDesiredCluster && (await isRollback(event.StackId))) {
           console.log(`adopting existing endpoint ${identifier} on rollback`);
+          if (needsRecreate(existing, resourceProperties)) {
+            return recreateEndpoint(
+              resourceProperties,
+              normalize(identifier),
+              deadline
+            );
+          }
           if (matchesProperties(existing, resourceProperties)) {
             // Return the same attributes as Create/Modify, so that GetAtt
             // references can be resolved again during the rollback.
@@ -307,9 +360,6 @@ export const onEvent: CdkCustomResourceHandler = async (event) => {
               PhysicalResourceId: normalize(identifier),
               Data: existing,
             };
-          }
-          if (!canModifyMembers(existing, resourceProperties)) {
-            return recreateEndpoint(resourceProperties, normalize(identifier));
           }
           return {
             PhysicalResourceId: normalize(identifier),
@@ -330,6 +380,10 @@ export const onEvent: CdkCustomResourceHandler = async (event) => {
       }
 
       if (existing === undefined) {
+        if (await isRollback(event.StackId)) {
+          console.log(`restoring missing endpoint ${identifier} on rollback`);
+          return restoreEndpoint(resourceProperties, event.PhysicalResourceId);
+        }
         throw new Error(
           `Custom endpoint "${identifier}" does not exist. ` +
             'Change endpointIdentifier to create a new endpoint.'
@@ -346,11 +400,15 @@ export const onEvent: CdkCustomResourceHandler = async (event) => {
         existing,
         resourceProperties,
         event.PhysicalResourceId,
-        event.StackId
+        event.StackId,
+        deadline
       );
     }
     case 'Delete':
-      return deleteEndpoint(resourceProperties.DBClusterEndpointIdentifier);
+      return deleteEndpoint(
+        resourceProperties.DBClusterEndpointIdentifier,
+        deadline
+      );
   }
 };
 
@@ -374,7 +432,8 @@ export const isComplete: CdkCustomResourceIsCompleteHandler = async (event) => {
         normalize(resourceProperties.DBClusterEndpointIdentifier)
     )?.Status as EndpointActionRunStatus | undefined;
   } catch (error) {
-    if (!isDelete || !isNotFoundError(error)) {
+    // Not found means "done" for Delete and "not yet" for Create/Update.
+    if (!isNotFoundError(error)) {
       throw error;
     }
   }

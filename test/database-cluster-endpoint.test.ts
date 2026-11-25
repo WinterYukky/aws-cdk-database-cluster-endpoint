@@ -1,4 +1,4 @@
-import { App, Stack } from 'aws-cdk-lib';
+import { App, CfnParameter, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as rds from 'aws-cdk-lib/aws-rds';
@@ -66,6 +66,40 @@ describe('DatabaseClusterEndpoint', () => {
       expect(json).not.toContain('My-Endpoint');
     }
   );
+
+  test('keeps a token endpointIdentifier unchanged in the property and the IAM ARN', () => {
+    const { stack, cluster } = setup();
+    const identifier = new CfnParameter(stack, 'EndpointIdentifier');
+    new DatabaseClusterEndpoint(stack, 'Endpoint', {
+      cluster,
+      endpointIdentifier: identifier.valueAsString,
+    });
+    const template = Template.fromStack(stack);
+    template.hasResourceProperties('Custom::DBClusterEndpoint', {
+      DBClusterEndpointIdentifier: { Ref: 'EndpointIdentifier' },
+    });
+    template.hasResourceProperties('AWS::IAM::Policy', {
+      PolicyDocument: {
+        Statement: Match.arrayWith([
+          Match.objectLike({
+            Resource: Match.arrayWith([
+              {
+                'Fn::Join': [
+                  '',
+                  [
+                    'arn:',
+                    { Ref: 'AWS::Partition' },
+                    ':rds:ap-northeast-1:123456789012:cluster-endpoint:',
+                    { Ref: 'EndpointIdentifier' },
+                  ],
+                ],
+              },
+            ]),
+          }),
+        ]),
+      },
+    });
+  });
 
   test('all() sets neither static nor excluded members', () => {
     const { stack, cluster } = setup();

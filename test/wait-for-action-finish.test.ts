@@ -132,6 +132,7 @@ beforeEach(() => {
   givenStackStatus('UPDATE_IN_PROGRESS');
   waitSettings.intervalMs = 1;
   waitSettings.maxWaitMs = 50;
+  waitSettings.reserveMs = 0;
   jest.spyOn(console, 'log').mockImplementation(() => {});
 });
 
@@ -812,14 +813,269 @@ describe('isComplete', () => {
     expect(result.IsComplete).toBe(true);
   });
 
-  test('Create rethrows not found', async () => {
-    rdsMock.on(DescribeDBClusterEndpointsCommand).rejects(notFound());
+  test.each(['Create', 'Update'])(
+    '%s is not complete while describe reports not found',
+    async (RequestType) => {
+      rdsMock.on(DescribeDBClusterEndpointsCommand).rejects(notFound());
+      const result = await invokeIsComplete({
+        RequestType,
+        PhysicalResourceId: 'my-endpoint',
+        ResourceProperties: baseProps,
+      });
+      expect(result.IsComplete).toBe(false);
+    }
+  );
+
+  test('rethrows other describe errors', async () => {
+    rdsMock.on(DescribeDBClusterEndpointsCommand).rejects(new Error('boom'));
     await expect(
       invokeIsComplete({
         RequestType: 'Create',
         PhysicalResourceId: 'my-endpoint',
         ResourceProperties: baseProps,
       })
-    ).rejects.toThrow('not found');
+    ).rejects.toThrow('boom');
+  });
+});
+
+describe('onEvent Update: rollback recovery', () => {
+  test('rollback creates the endpoint when it is missing and keeps the physical id', async () => {
+    // A previous rollback attempt deleted the endpoint and failed before
+    // creating it again; ContinueUpdateRollback re-sends the same event.
+    givenEndpoints({});
+    givenStackStatus('UPDATE_ROLLBACK_IN_PROGRESS');
+    const result = await update(
+      baseProps,
+      {
+        ...baseProps,
+        StaticMembers: ['a'],
+      },
+      'legacy-request-id'
+    );
+    expect(result.PhysicalResourceId).toBe('legacy-request-id');
+    expect(result.Data.Endpoint).toBe(hostname('my-endpoint'));
+    expect(calls(CreateDBClusterEndpointCommand)[0].args[0].input).toEqual({
+      DBClusterIdentifier: 'my-cluster',
+      DBClusterEndpointIdentifier: 'my-endpoint',
+      EndpointType: 'READER',
+      StaticMembers: undefined,
+      ExcludedMembers: undefined,
+      Tags: tags,
+    });
+    expect(calls(DeleteDBClusterEndpointCommand)).toHaveLength(0);
+  });
+
+  test('a forward update still fails when the endpoint is missing', async () => {
+    givenEndpoints({});
+    await expect(
+      update(baseProps, { ...baseProps, StaticMembers: ['a'] })
+    ).rejects.toThrow(/does not exist/);
+    expect(calls(CreateDBClusterEndpointCommand)).toHaveLength(0);
+  });
+
+  test('rollback recreates an endpoint that is already deleting', async () => {
+    const endpoints: Record<string, any> = {
+      'my-endpoint': { cluster: 'my-cluster', status: 'deleting' },
+    };
+    let describes = 0;
+    rdsMock.on(DescribeDBClusterEndpointsCommand).callsFake((input) => {
+      const id = input.DBClusterEndpointIdentifier.toLowerCase();
+      if (endpoints[id]?.status === 'deleting' && ++describes >= 3) {
+        delete endpoints[id];
+      }
+      if (!endpoints[id]) {
+        throw notFound();
+      }
+      return {
+        DBClusterEndpoints: [
+          {
+            DBClusterEndpointIdentifier: id,
+            DBClusterIdentifier: 'my-cluster',
+            Status: endpoints[id].status,
+            CustomEndpointType: 'READER',
+            StaticMembers: [],
+            ExcludedMembers: [],
+          },
+        ],
+      };
+    });
+    rdsMock.on(DeleteDBClusterEndpointCommand).rejects(invalidState());
+    givenStackStatus('UPDATE_ROLLBACK_IN_PROGRESS');
+    const result = await update(baseProps, {
+      ...baseProps,
+      EndpointType: 'ANY',
+    });
+    expect(result.Data.Endpoint).toBe(hostname('my-endpoint'));
+    expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(0);
+    expect(calls(CreateDBClusterEndpointCommand)).toHaveLength(1);
+  });
+
+  test('rollback adoption recreates a previous endpoint that is deleting', async () => {
+    const endpoints: Record<string, any> = {
+      'my-endpoint': { cluster: 'my-cluster', status: 'deleting' },
+      'new-endpoint': { cluster: 'my-cluster' },
+    };
+    givenEndpoints(endpoints);
+    rdsMock.on(DeleteDBClusterEndpointCommand).callsFake((input) => {
+      delete endpoints[input.DBClusterEndpointIdentifier.toLowerCase()];
+      return {};
+    });
+    givenStackStatus('UPDATE_ROLLBACK_IN_PROGRESS');
+    const result = await update(baseProps, propsB, 'new-endpoint');
+    expect(result.PhysicalResourceId).toBe('my-endpoint');
+    expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(0);
+    expect(calls(CreateDBClusterEndpointCommand)).toHaveLength(1);
+  });
+
+  test('a forward update does not recreate a deleting endpoint', async () => {
+    givenEndpoints({
+      'my-endpoint': { cluster: 'my-cluster', status: 'deleting' },
+    });
+    await update({ ...baseProps, EndpointType: 'ANY' }, baseProps);
+    expect(calls(DeleteDBClusterEndpointCommand)).toHaveLength(0);
+    expect(calls(CreateDBClusterEndpointCommand)).toHaveLength(0);
+  });
+});
+
+describe('onEvent wait deadline', () => {
+  test('all waits of one invocation share a deadline derived from the remaining Lambda time', async () => {
+    // Fake clock: every Describe call takes 100 ms.
+    let clock = 0;
+    const now = jest.spyOn(Date, 'now').mockImplementation(() => clock);
+    try {
+      waitSettings.maxWaitMs = 1_000;
+      waitSettings.reserveMs = 60_000;
+      const endpoints: Record<string, any> = {
+        'my-endpoint': {
+          cluster: 'my-cluster',
+          status: 'modifying',
+          staticMembers: ['a'],
+        },
+      };
+      let describes = 0;
+      rdsMock.on(DescribeDBClusterEndpointsCommand).callsFake(() => {
+        clock += 100;
+        describes++;
+        // Modify finishes after 6 polls, then the delete never completes.
+        if (describes === 6) {
+          endpoints['my-endpoint'].status = 'available';
+        }
+        const e = endpoints['my-endpoint'];
+        return {
+          DBClusterEndpoints: [
+            {
+              DBClusterEndpointIdentifier: 'my-endpoint',
+              DBClusterIdentifier: 'my-cluster',
+              Status: e.status,
+              CustomEndpointType: 'READER',
+              StaticMembers: e.staticMembers,
+              ExcludedMembers: [],
+            },
+          ],
+        };
+      });
+      rdsMock.on(DeleteDBClusterEndpointCommand).callsFake(() => {
+        if (endpoints['my-endpoint'].status === 'modifying') {
+          throw invalidState();
+        }
+        endpoints['my-endpoint'].status = 'deleting';
+        return {};
+      });
+      givenStackStatus('UPDATE_ROLLBACK_IN_PROGRESS');
+      const context = { getRemainingTimeInMillis: () => 60_000 + 1_000 };
+      await expect(
+        (onEvent as any)(
+          {
+            ...baseEvent,
+            RequestType: 'Update',
+            PhysicalResourceId: 'my-endpoint',
+            ResourceProperties: baseProps,
+            OldResourceProperties: { ...baseProps, StaticMembers: ['a'] },
+          },
+          context,
+          () => {}
+        )
+      ).rejects.toThrow(
+        /Timed out waiting for endpoint my-endpoint to be deleted/
+      );
+      // 1 s budget / 100 ms per poll: separate deadlines would allow ~16 polls.
+      expect(describes).toBeLessThanOrEqual(12);
+      expect(calls(CreateDBClusterEndpointCommand)).toHaveLength(0);
+    } finally {
+      now.mockRestore();
+    }
+  });
+});
+
+describe('identifiers resolved from tokens keep their casing in API calls', () => {
+  // A token (e.g. a CfnParameter) cannot be lowercased at synth, so the IAM
+  // policy refers to the value as resolved.
+  const tokenProps = {
+    ...baseProps,
+    DBClusterEndpointIdentifier: 'Tok-Endpoint-ABC',
+  };
+
+  test('Create sends the identifier unchanged', async () => {
+    await invokeOnEvent({
+      RequestType: 'Create',
+      ResourceProperties: tokenProps,
+    });
+    expect(
+      calls(CreateDBClusterEndpointCommand)[0].args[0].input
+        .DBClusterEndpointIdentifier
+    ).toBe('Tok-Endpoint-ABC');
+  });
+
+  test('Modify, AddTags and Describe send the identifier unchanged and match the lowercase result', async () => {
+    givenEndpoints({ 'tok-endpoint-abc': { cluster: 'my-cluster' } });
+    const { Tags: _legacy, ...untagged } = tokenProps;
+    await update(
+      { ...tokenProps, EndpointType: 'ANY' },
+      untagged,
+      'legacy-request-id'
+    );
+    expect(
+      calls(DescribeDBClusterEndpointsCommand)[0].args[0].input
+        .DBClusterEndpointIdentifier
+    ).toBe('Tok-Endpoint-ABC');
+    expect(
+      calls(ModifyDBClusterEndpointCommand)[0].args[0].input
+        .DBClusterEndpointIdentifier
+    ).toBe('Tok-Endpoint-ABC');
+    expect(calls(AddTagsToResourceCommand)[0].args[0].input.ResourceName).toBe(
+      'arn:aws:rds:ap-northeast-1:123456789012:cluster-endpoint:Tok-Endpoint-ABC'
+    );
+  });
+
+  test('Delete sends the identifier unchanged', async () => {
+    await invokeOnEvent({
+      RequestType: 'Delete',
+      PhysicalResourceId: 'tok-endpoint-abc',
+      ResourceProperties: tokenProps,
+    });
+    expect(calls(DeleteDBClusterEndpointCommand)[0].args[0].input).toEqual({
+      DBClusterEndpointIdentifier: 'Tok-Endpoint-ABC',
+    });
+  });
+
+  test('isComplete matches the lowercase Describe result', async () => {
+    rdsMock.on(DescribeDBClusterEndpointsCommand).resolves({
+      DBClusterEndpoints: [
+        {
+          DBClusterEndpointIdentifier: 'tok-endpoint-abc',
+          Status: 'available',
+        },
+      ],
+    });
+    const result = await invokeIsComplete({
+      RequestType: 'Create',
+      PhysicalResourceId: 'tok-endpoint-abc',
+      ResourceProperties: tokenProps,
+    });
+    expect(result.IsComplete).toBe(true);
+    expect(
+      calls(DescribeDBClusterEndpointsCommand)[0].args[0].input
+        .DBClusterEndpointIdentifier
+    ).toBe('Tok-Endpoint-ABC');
   });
 });
