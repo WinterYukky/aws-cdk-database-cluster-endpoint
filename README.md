@@ -70,10 +70,11 @@ const customEndpoint = new DatabaseClusterEndpoint(cluster, 'CustomEndpoint', {
 
 ## Updating endpoints
 
-- `endpointType` and `members` are updated in place.
+- `endpointType` and most `members` changes are updated in place (see the exceptions below).
 - Changing `endpointIdentifier` replaces the endpoint: the new endpoint is created first, and the old one is deleted at the end of the deployment. The hostname changes.
 - Changing only `cluster` fails, because custom endpoint names are unique per account and Region. Set a new `endpointIdentifier` explicitly (also when the identifier was generated automatically) to move the endpoint to another cluster.
-- Changing `members` from `include()`/`exclude()` to `all()` in place fails, because RDS does not clear existing members. Change `endpointIdentifier` at the same time to replace the endpoint.
+- Changing `members` from `include()` to `all()` or `exclude()`, or from `exclude()` to `all()`, fails in place, because RDS does not clear existing member lists. Change `endpointIdentifier` at the same time to replace the endpoint. All other member changes (for example `all()` to `include()`, or `exclude()` to `include()`) are applied in place.
+- If CloudFormation rolls back an update that changed `members` in a way RDS cannot undo in place (for example `all()` to `include()`), the rollback deletes the endpoint and creates it again with the same identifier and hostname. The endpoint does not resolve while it is recreated (about 3 minutes in our measurement).
 
 Each endpoint is tagged with `cdk-database-cluster-endpoint:stack-id` set to the ID of the owning stack. The handler can delete or modify endpoints that are no longer referenced by the construct (replaced or rolled back endpoints) only when they carry this tag. If you move the construct to another stack (stack refactoring or resource import), endpoints tagged with the old stack ID can no longer be cleaned up by the new stack.
 

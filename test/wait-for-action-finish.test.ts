@@ -276,7 +276,7 @@ describe('onEvent Update: identifier change (replacement)', () => {
     expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(0);
   });
 
-  test('a case-only identifier change is modified in place', async () => {
+  test('a case-only identifier change is handled in place', async () => {
     givenEndpoints({ 'my-endpoint': { cluster: 'my-cluster' } });
     const result = await update(
       { ...baseProps, DBClusterEndpointIdentifier: 'My-Endpoint' },
@@ -287,7 +287,7 @@ describe('onEvent Update: identifier change (replacement)', () => {
     expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(0);
   });
 
-  test('rollback of a case-only identifier change is modified in place', async () => {
+  test('rollback of a case-only identifier change is handled in place', async () => {
     givenEndpoints({ 'my-endpoint': { cluster: 'my-cluster' } });
     givenStackStatus('UPDATE_ROLLBACK_IN_PROGRESS');
     await update(baseProps, {
@@ -387,20 +387,6 @@ describe('onEvent Update: in place', () => {
     ).rejects.toThrow(/does not exist/);
   });
 
-  test.each([
-    ['include()', { StaticMembers: ['a'] }],
-    ['exclude()', { ExcludedMembers: ['a'] }],
-  ])(
-    'fails without calling Modify when switching from %s to all()',
-    async (_, oldMembers) => {
-      givenEndpoints({ 'my-endpoint': { cluster: 'my-cluster' } });
-      await expect(
-        update(baseProps, { ...baseProps, ...oldMembers })
-      ).rejects.toThrow(/Change endpointIdentifier/);
-      expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(0);
-    }
-  );
-
   test('switching to all() together with a new identifier replaces the endpoint', async () => {
     givenEndpoints({ 'my-endpoint': { cluster: 'my-cluster' } });
     const result = await update(propsB, { ...baseProps, StaticMembers: ['a'] });
@@ -409,10 +395,220 @@ describe('onEvent Update: in place', () => {
     expect(input.StaticMembers).toBeUndefined();
     expect(input.ExcludedMembers).toBeUndefined();
   });
+});
 
-  // Pending a decision on findings 2 and 4 of the review.
-  test.todo('rollback of all() -> include()/exclude() restores all()');
-  test.todo('include() -> exclude() in place clears the static members');
+describe('onEvent Update: member transitions that Modify cannot express', () => {
+  type Members = { staticMembers?: string[]; excludedMembers?: string[] };
+  const desired = (m: Members) => ({
+    ...baseProps,
+    ...(m.staticMembers ? { StaticMembers: m.staticMembers } : {}),
+    ...(m.excludedMembers ? { ExcludedMembers: m.excludedMembers } : {}),
+  });
+  const unreachable: Array<[string, Members, Members]> = [
+    ['include() -> all()', { staticMembers: ['a'] }, {}],
+    [
+      'include() -> exclude()',
+      { staticMembers: ['a'] },
+      { excludedMembers: ['b'] },
+    ],
+    ['exclude() -> all()', { excludedMembers: ['a'] }, {}],
+  ];
+
+  /** Endpoints whose state follows Create/Delete calls. */
+  const givenLiveEndpoints = (
+    endpoints: Record<string, { cluster: string; status?: string } & Members>
+  ) => {
+    givenEndpoints(endpoints);
+    rdsMock.on(DeleteDBClusterEndpointCommand).callsFake((input) => {
+      delete endpoints[input.DBClusterEndpointIdentifier.toLowerCase()];
+      return {};
+    });
+    rdsMock.on(CreateDBClusterEndpointCommand).callsFake((input) => {
+      endpoints[input.DBClusterEndpointIdentifier.toLowerCase()] = {
+        cluster: input.DBClusterIdentifier,
+        status: 'creating',
+        staticMembers: input.StaticMembers,
+        excludedMembers: input.ExcludedMembers,
+      };
+      return endpointOutput(input);
+    });
+    return endpoints;
+  };
+
+  test.each(unreachable)(
+    '%s fails fast on a forward update',
+    async (_name, actual, wanted) => {
+      givenLiveEndpoints({
+        'my-endpoint': { cluster: 'my-cluster', ...actual },
+      });
+      await expect(update(desired(wanted), desired(actual))).rejects.toThrow(
+        /Change endpointIdentifier/
+      );
+      expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(0);
+      expect(calls(DeleteDBClusterEndpointCommand)).toHaveLength(0);
+      expect(calls(CreateDBClusterEndpointCommand)).toHaveLength(0);
+    }
+  );
+
+  test('decides from the actual members, not from OldResourceProperties', async () => {
+    givenLiveEndpoints({
+      'my-endpoint': { cluster: 'my-cluster', staticMembers: ['a'] },
+    });
+    // OldResourceProperties claim all(), but the endpoint still has static members.
+    await expect(
+      update(baseProps, { ...baseProps, EndpointType: 'ANY' })
+    ).rejects.toThrow(/Change endpointIdentifier/);
+  });
+
+  test('does nothing when the actual members already match', async () => {
+    givenLiveEndpoints({ 'my-endpoint': { cluster: 'my-cluster' } });
+    // OldResourceProperties claim include(), but the endpoint already targets all instances.
+    const result = await update(baseProps, {
+      ...baseProps,
+      StaticMembers: ['a'],
+    });
+    expect(result.Data.Endpoint).toBe(hostname('my-endpoint'));
+    expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(0);
+    expect(calls(DeleteDBClusterEndpointCommand)).toHaveLength(0);
+  });
+
+  test.each(unreachable)(
+    'rollback of the reverse of %s recreates the endpoint',
+    async (_name, actual, wanted) => {
+      // The forward update reached `actual` (the reverse transition succeeded
+      // through Modify); the rollback asks for `wanted` again.
+      const endpoints = givenLiveEndpoints({
+        'my-endpoint': { cluster: 'my-cluster', ...actual },
+      });
+      givenStackStatus('UPDATE_ROLLBACK_IN_PROGRESS');
+      const result = await update(
+        desired(wanted),
+        desired(actual),
+        'legacy-request-id'
+      );
+      expect(result.PhysicalResourceId).toBe('legacy-request-id');
+      expect(result.Data.Endpoint).toBe(hostname('my-endpoint'));
+      expect(result.Data.DBClusterEndpointIdentifier).toBe('my-endpoint');
+      expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(0);
+      expect(calls(DeleteDBClusterEndpointCommand)[0].args[0].input).toEqual({
+        DBClusterEndpointIdentifier: 'my-endpoint',
+      });
+      expect(calls(CreateDBClusterEndpointCommand)[0].args[0].input).toEqual({
+        DBClusterIdentifier: 'my-cluster',
+        DBClusterEndpointIdentifier: 'my-endpoint',
+        EndpointType: 'READER',
+        StaticMembers: wanted.staticMembers,
+        ExcludedMembers: wanted.excludedMembers,
+        Tags: tags,
+      });
+      expect(endpoints['my-endpoint'].status).toBe('creating');
+    }
+  );
+
+  test('rollback recreate waits until the endpoint is gone before creating it again', async () => {
+    const endpoints: Record<string, any> = {
+      'my-endpoint': { cluster: 'my-cluster', staticMembers: ['a'] },
+    };
+    let describesWhileDeleting = 0;
+    rdsMock.on(DeleteDBClusterEndpointCommand).callsFake(() => {
+      endpoints['my-endpoint'] = { cluster: 'my-cluster', status: 'deleting' };
+      return {};
+    });
+    rdsMock.on(DescribeDBClusterEndpointsCommand).callsFake((input) => {
+      const id = input.DBClusterEndpointIdentifier;
+      if (
+        endpoints[id]?.status === 'deleting' &&
+        ++describesWhileDeleting >= 3
+      ) {
+        delete endpoints[id];
+      }
+      if (!endpoints[id]) {
+        throw notFound();
+      }
+      return {
+        DBClusterEndpoints: [
+          {
+            DBClusterEndpointIdentifier: id,
+            DBClusterIdentifier: 'my-cluster',
+            Status: endpoints[id].status ?? 'available',
+            CustomEndpointType: 'READER',
+            StaticMembers: endpoints[id].staticMembers ?? [],
+            ExcludedMembers: [],
+          },
+        ],
+      };
+    });
+    rdsMock.on(CreateDBClusterEndpointCommand).callsFake((input) => {
+      if (endpoints['my-endpoint']) {
+        throw new Error('created before the old endpoint was gone');
+      }
+      return endpointOutput(input);
+    });
+    givenStackStatus('UPDATE_ROLLBACK_IN_PROGRESS');
+    await update(baseProps, { ...baseProps, StaticMembers: ['a'] });
+    expect(describesWhileDeleting).toBeGreaterThanOrEqual(3);
+    expect(calls(CreateDBClusterEndpointCommand)).toHaveLength(1);
+  });
+
+  test('rollback recreate fails when the endpoint does not disappear in time', async () => {
+    givenEndpoints({
+      'my-endpoint': { cluster: 'my-cluster', staticMembers: ['a'] },
+    });
+    givenStackStatus('UPDATE_ROLLBACK_IN_PROGRESS');
+    await expect(
+      update(baseProps, { ...baseProps, StaticMembers: ['a'] })
+    ).rejects.toThrow(
+      /Timed out waiting for endpoint my-endpoint to be deleted/
+    );
+    expect(calls(CreateDBClusterEndpointCommand)).toHaveLength(0);
+  });
+
+  test.each<[string, Members, Members]>([
+    [
+      'exclude() -> include()',
+      { excludedMembers: ['a'] },
+      { staticMembers: ['b'] },
+    ],
+    [
+      'include() -> other include()',
+      { staticMembers: ['a'] },
+      { staticMembers: ['b'] },
+    ],
+    [
+      'exclude() -> other exclude()',
+      { excludedMembers: ['a'] },
+      { excludedMembers: ['b'] },
+    ],
+    ['all() -> include()', {}, { staticMembers: ['b'] }],
+    ['all() -> exclude()', {}, { excludedMembers: ['b'] }],
+  ])(
+    'rollback to %s uses Modify without recreating',
+    async (_name, actual, wanted) => {
+      givenLiveEndpoints({
+        'my-endpoint': { cluster: 'my-cluster', ...actual },
+      });
+      givenStackStatus('UPDATE_ROLLBACK_IN_PROGRESS');
+      await update(desired(wanted), desired(actual));
+      expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(1);
+      expect(calls(DeleteDBClusterEndpointCommand)).toHaveLength(0);
+      expect(calls(CreateDBClusterEndpointCommand)).toHaveLength(0);
+    }
+  );
+
+  test('rollback adoption of a replaced endpoint recreates it when Modify cannot restore it', async () => {
+    givenLiveEndpoints({
+      'my-endpoint': { cluster: 'my-cluster', staticMembers: ['a'] },
+      'new-endpoint': { cluster: 'my-cluster' },
+    });
+    givenStackStatus('UPDATE_ROLLBACK_IN_PROGRESS');
+    const result = await update(baseProps, propsB, 'new-endpoint');
+    expect(result.PhysicalResourceId).toBe('my-endpoint');
+    expect(result.Data.Endpoint).toBe(hostname('my-endpoint'));
+    expect(calls(DeleteDBClusterEndpointCommand)[0].args[0].input).toEqual({
+      DBClusterEndpointIdentifier: 'my-endpoint',
+    });
+    expect(calls(ModifyDBClusterEndpointCommand)).toHaveLength(0);
+  });
 });
 
 describe('onEvent returns the attributes exposed by the construct', () => {
@@ -576,6 +772,7 @@ describe('isComplete', () => {
     ['Create', 'creating', false],
     ['Create', 'available', true],
     ['Create', undefined, false],
+    ['Update', 'creating', false],
     ['Update', 'modifying', false],
     ['Update', 'available', true],
     ['Update', 'inactive', true],

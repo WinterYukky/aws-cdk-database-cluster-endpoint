@@ -122,28 +122,30 @@ const hasMembers = (members: string[] | undefined) =>
   members !== undefined && members.length > 0;
 
 /**
- * Single decision point for member transitions that ModifyDBClusterEndpoint
- * cannot express, because it ignores empty member lists
- * (include()/exclude() -> all()). Review findings 2 and 4 are pending a
- * decision on the mechanism; until then such transitions fail fast.
+ * Whether ModifyDBClusterEndpoint can turn the actual members of an endpoint
+ * into the desired ones. It ignores empty member lists, so an existing static
+ * list can never be cleared, and an existing exclusion list cannot be cleared
+ * when the endpoint goes back to all instances.
  */
-const assertMembersCanBeModified = (
-  properties: EndpointProperties,
-  oldProperties: EndpointProperties
-) => {
-  if (
-    (hasMembers(oldProperties.StaticMembers) ||
-      hasMembers(oldProperties.ExcludedMembers)) &&
+const canModifyMembers = (
+  endpoint: DBClusterEndpoint,
+  properties: EndpointProperties
+) =>
+  !(
+    hasMembers(endpoint.StaticMembers) && !hasMembers(properties.StaticMembers)
+  ) &&
+  !(
+    hasMembers(endpoint.ExcludedMembers) &&
     !hasMembers(properties.StaticMembers) &&
     !hasMembers(properties.ExcludedMembers)
-  ) {
-    throw new Error(
-      `Cannot change the members of custom endpoint "${properties.DBClusterEndpointIdentifier}" ` +
-        'from include()/exclude() to all() in place, because RDS does not clear existing members. ' +
-        'Change endpointIdentifier at the same time to replace the endpoint.'
-    );
-  }
-};
+  );
+
+const membersCannotBeModifiedError = (properties: EndpointProperties) =>
+  new Error(
+    `Cannot change the members of custom endpoint "${properties.DBClusterEndpointIdentifier}" in place ` +
+      '(include() -> all(), include() -> exclude() or exclude() -> all()), because RDS does not clear existing members. ' +
+      'Change endpointIdentifier at the same time to replace the endpoint.'
+  );
 
 const sameMembers = (
   actual: string[] | undefined,
@@ -219,6 +221,56 @@ const deleteEndpoint = async (identifier: string | undefined) => {
   }
 };
 
+const waitUntilDeleted = async (identifier: string | undefined) => {
+  const deadline = Date.now() + waitSettings.maxWaitMs;
+  while ((await describeEndpoint(identifier)) !== undefined) {
+    if (Date.now() >= deadline) {
+      throw new Error(
+        `Timed out waiting for endpoint ${identifier} to be deleted`
+      );
+    }
+    await sleep(waitSettings.intervalMs);
+  }
+};
+
+/**
+ * Used only during a rollback, when the previous members cannot be restored
+ * with ModifyDBClusterEndpoint: deletes the endpoint and creates it again with
+ * the same identifier. The hostname stays the same, but the endpoint does not
+ * resolve while it is recreated.
+ */
+const recreateEndpoint = async (
+  properties: EndpointProperties,
+  physicalResourceId: string
+) => {
+  const identifier = properties.DBClusterEndpointIdentifier;
+  console.log(`recreating endpoint ${identifier} to restore its members`);
+  await deleteEndpoint(identifier);
+  await waitUntilDeleted(identifier);
+  const created = await createEndpoint(properties);
+  return { PhysicalResourceId: physicalResourceId, Data: created.Data };
+};
+
+/**
+ * Applies type and members to an existing endpoint on the desired cluster.
+ * Transitions that Modify cannot express fail on a forward update and are
+ * resolved by recreating the endpoint during a rollback.
+ */
+const applyProperties = async (
+  endpoint: DBClusterEndpoint,
+  properties: EndpointProperties,
+  physicalResourceId: string,
+  stackId: string
+) => {
+  if (!canModifyMembers(endpoint, properties)) {
+    if (await isRollback(stackId)) {
+      return recreateEndpoint(properties, physicalResourceId);
+    }
+    throw membersCannotBeModifiedError(properties);
+  }
+  return modifyEndpoint(endpoint, properties, physicalResourceId);
+};
+
 export const onEvent: CdkCustomResourceHandler = async (event) => {
   console.log(event);
   const resourceProperties = event.ResourceProperties as EndpointProperties;
@@ -256,6 +308,9 @@ export const onEvent: CdkCustomResourceHandler = async (event) => {
               Data: existing,
             };
           }
+          if (!canModifyMembers(existing, resourceProperties)) {
+            return recreateEndpoint(resourceProperties, normalize(identifier));
+          }
           return {
             PhysicalResourceId: normalize(identifier),
             Data: await rds.send(
@@ -287,11 +342,11 @@ export const onEvent: CdkCustomResourceHandler = async (event) => {
             'Set a new endpointIdentifier explicitly (also when it was generated automatically) to replace the endpoint.'
         );
       }
-      assertMembersCanBeModified(resourceProperties, oldResourceProperties);
-      return modifyEndpoint(
+      return applyProperties(
         existing,
         resourceProperties,
-        event.PhysicalResourceId
+        event.PhysicalResourceId,
+        event.StackId
       );
     }
     case 'Delete':
