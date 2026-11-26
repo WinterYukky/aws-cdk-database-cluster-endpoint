@@ -32,8 +32,10 @@ const project = new awscdk.AwsCdkConstructLibrary({
     'Construct library to create custom endpoints for Amazon Aurora with the AWS CDK' /* The description is just a string that helps people understand the purpose of the package. */,
   devDeps: [
     'esbuild',
+    '@aws-sdk/client-cloudformation',
     '@aws-sdk/client-rds',
     '@types/aws-lambda',
+    'aws-sdk-client-mock',
   ] /* Build dependencies for this module. */,
   gitignore: ['src/lib/**/*.js'],
   githubOptions: {
@@ -100,7 +102,7 @@ if (approveJob && 'steps' in approveJob) {
 
 // complie the custom resource Lambda functions
 const complieCustomResourceCommand =
-  'yarn esbuild src/lib/wait-for-action-finish/index.ts --bundle --outdir=src/lib/wait-for-action-finish/ --platform=node --external:@aws-sdk/client-rds';
+  'yarn esbuild src/lib/wait-for-action-finish/index.ts --bundle --outdir=src/lib/wait-for-action-finish/ --platform=node --external:@aws-sdk/client-rds --external:@aws-sdk/client-cloudformation';
 project.preCompileTask.exec(complieCustomResourceCommand);
 project.testTask.prependExec(complieCustomResourceCommand);
 project.tasks.all

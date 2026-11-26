@@ -9,6 +9,7 @@ import {
   PhysicalName,
   Names,
   Lazy,
+  Token,
 } from 'aws-cdk-lib';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import {
@@ -20,6 +21,11 @@ import {
 import { Endpoint, IDatabaseCluster } from 'aws-cdk-lib/aws-rds';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
+
+/**
+ * Tag set on every custom endpoint, used to scope the permissions of the handler.
+ */
+const OWNER_TAG_KEY = 'cdk-database-cluster-endpoint:stack-id';
 
 /**
  * Each custom endpoint has an associated type that determines
@@ -145,8 +151,13 @@ export class DatabaseClusterEndpoint extends Resource {
     props: DatabaseClusterEndpointProps
   ) {
     super(scope, id, {
+      // RDS stores identifiers in lowercase; use the stored form so that the
+      // IAM resource ARNs match the endpoint.
       physicalName:
-        props.endpointIdentifier ??
+        (props.endpointIdentifier !== undefined &&
+        !Token.isUnresolved(props.endpointIdentifier)
+          ? props.endpointIdentifier.toLowerCase()
+          : props.endpointIdentifier) ??
         Lazy.string({
           produce: () =>
             Names.uniqueResourceName(this, {
@@ -212,6 +223,63 @@ export class DatabaseClusterEndpoint extends Resource {
       })
     );
 
+    // Endpoints that are no longer referenced by this construct (replaced by an
+    // identifier change, or restored during a rollback) are only reachable through
+    // the ownership tag that the handler sets on every endpoint of this stack.
+    onEventHandler.addToRolePolicy(
+      new PolicyStatement({
+        actions: ['rds:DeleteDBClusterEndpoint', 'rds:ModifyDBClusterEndpoint'],
+        resources: [
+          Arn.format(
+            {
+              service: 'rds',
+              resource: 'cluster-endpoint',
+              resourceName: '*',
+              arnFormat: ArnFormat.COLON_RESOURCE_NAME,
+            },
+            stack
+          ),
+        ],
+        conditions: {
+          StringEquals: {
+            [`aws:ResourceTag/${OWNER_TAG_KEY}`]: stack.stackId,
+          },
+        },
+      })
+    );
+    onEventHandler.addToRolePolicy(
+      new PolicyStatement({
+        actions: ['rds:DescribeDBClusterEndpoints'],
+        resources: [
+          Arn.format(
+            {
+              service: 'rds',
+              resource: 'cluster',
+              resourceName: '*',
+              arnFormat: ArnFormat.COLON_RESOURCE_NAME,
+            },
+            stack
+          ),
+          Arn.format(
+            {
+              service: 'rds',
+              resource: 'cluster-endpoint',
+              resourceName: '*',
+              arnFormat: ArnFormat.COLON_RESOURCE_NAME,
+            },
+            stack
+          ),
+        ],
+      })
+    );
+    // Used to detect a rollback of the stack update.
+    onEventHandler.addToRolePolicy(
+      new PolicyStatement({
+        actions: ['cloudformation:DescribeStacks'],
+        resources: [Stack.of(this).stackId],
+      })
+    );
+
     // Get or create completion handler at stack level
     const isCompleteHandler = new SingletonFunction(
       this,
@@ -230,12 +298,14 @@ export class DatabaseClusterEndpoint extends Resource {
     isCompleteHandler.addToRolePolicy(
       new PolicyStatement({
         actions: ['rds:DescribeDBClusterEndpoints'],
+        // Also covers endpoints and clusters that were removed from this
+        // construct but still have to be waited for during deletion.
         resources: [
           Arn.format(
             {
               service: 'rds',
               resource: 'cluster',
-              resourceName: props.cluster.clusterIdentifier,
+              resourceName: '*',
               arnFormat: ArnFormat.COLON_RESOURCE_NAME,
             },
             stack
@@ -244,7 +314,7 @@ export class DatabaseClusterEndpoint extends Resource {
             {
               service: 'rds',
               resource: 'cluster-endpoint',
-              resourceName: this.physicalName,
+              resourceName: '*',
               arnFormat: ArnFormat.COLON_RESOURCE_NAME,
             },
             stack
@@ -272,6 +342,7 @@ export class DatabaseClusterEndpoint extends Resource {
         EndpointType: endpointType,
         ExcludedMembers: excludedMembers,
         StaticMembers: staticMembers,
+        Tags: [{ Key: OWNER_TAG_KEY, Value: stack.stackId }],
       },
     });
     this.cluster = props.cluster;

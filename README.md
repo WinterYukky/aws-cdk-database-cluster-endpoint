@@ -68,6 +68,21 @@ const customEndpoint = new DatabaseClusterEndpoint(cluster, 'CustomEndpoint', {
 });
 ```
 
+## Updating endpoints
+
+- `endpointType` and most `members` changes are updated in place (see the exceptions below).
+- Changing `endpointIdentifier` replaces the endpoint: the new endpoint is created first, and the old one is deleted at the end of the deployment. The hostname changes.
+- Changing only `cluster` fails, because custom endpoint names are unique per account and Region. Set a new `endpointIdentifier` explicitly (also when the identifier was generated automatically) to move the endpoint to another cluster.
+- Changing `members` from `include()` to `all()` or `exclude()`, or from `exclude()` to `all()`, fails in place, because RDS does not clear existing member lists. Change `endpointIdentifier` at the same time to replace the endpoint. All other member changes (for example `all()` to `include()`, or `exclude()` to `include()`) are applied in place.
+- If CloudFormation rolls back an update that changed `members` in a way RDS cannot undo in place (for example `all()` to `include()`), the rollback deletes the endpoint and creates it again with the same identifier and hostname. The endpoint does not resolve while it is recreated (about 3 minutes in our measurement).
+- If a rollback fails (for example because the Lambda function timed out while recreating the endpoint), run `aws cloudformation continue-update-rollback` (or *Continue update rollback* in the console). The handler creates the endpoint again if it is missing.
+
+Each endpoint is tagged with `cdk-database-cluster-endpoint:stack-id` set to the ID of the owning stack. The handler can delete or modify endpoints that are no longer referenced by the construct (replaced or rolled back endpoints) only when they carry this tag. If you move the construct to another stack (stack refactoring or resource import), endpoints tagged with the old stack ID can no longer be cleaned up by the new stack.
+
+### Upgrading from an earlier version
+
+The first deployment after upgrading runs one update of every custom endpoint to add the ownership tag. Deploy the upgrade first, then change `endpointIdentifier` in a later deployment. If both happen in the same deployment, the old untagged endpoint cannot be deleted during cleanup; the deployment still succeeds, but you have to delete the old endpoint manually.
+
 ## Connecting
 
 The endpoints to access your custom endpoint will be available as the `.endpoint` attributes:
